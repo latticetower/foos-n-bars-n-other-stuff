@@ -77,5 +77,12 @@ int main()
   }
 
 
+  for (long i = 0; i < m; i++)
+    delete[] field[i];
+  delete[] field;
+  
+  delete[] data_m;
+  delete[] data_n;
+  
   return 0;
 }

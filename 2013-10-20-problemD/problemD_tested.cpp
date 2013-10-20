@@ -27,7 +27,7 @@ struct WeightData
 };
 
 
-min_result get_problem_input_and_return_something(long m, long n, Cell** field, bool with_debug = false) 
+min_result get_problem_input_and_return_something(long m, long n, Cell** field) 
 {
   long all_weights = 0;
   WeightData* data_m = new WeightData[m];
@@ -53,7 +53,7 @@ min_result get_problem_input_and_return_something(long m, long n, Cell** field, 
   {
     data_n[j].prev_el = data_n[j - 1].cell + data_n[j - 1].prev_el;
     data_n[j].prev = data_n[j - 1].prev_cost();
-
+    
     data_n[n - 1 - j].next_el = data_n[n - j].cell + data_n[n - j].next_el;
     data_n[n - 1 - j].next = data_n[n - j].next_cost();
   }
@@ -74,16 +74,9 @@ min_result get_problem_input_and_return_something(long m, long n, Cell** field, 
   }
   
   minimum.min += all_weights;
+  delete[] data_m;
+  delete[] data_n;
   return minimum;
-}
-
-void debug_some_data(long m, long* array, char * array_name)
-{
-  std::cout << array_name << std::endl;
-  for (long i = 0; i < m; i++) {
-    std::cout << array[i] << " ";
-  }
-  std::cout << std::endl;
 }
 
 void get_bruteforced_value(long m, long n, Cell** space_matrix, long k, long l)
@@ -129,7 +122,7 @@ void solution()
 {
   long m, n;
   std::cin >> m >> n;
-  Cell ** space_matrix = new Cell*[m];
+  Cell** space_matrix = new Cell*[m];
   for (long i = 0; i < m; i++)
   {
     space_matrix[i] = new Cell[n];
@@ -138,10 +131,15 @@ void solution()
       std::cin >> space_matrix[i][j].weight;
     }
   }
+  
 
   min_result minimum = get_problem_input_and_return_something(m,n,space_matrix); 
   std::cout << (minimum.x + 1) << " " << (minimum.y + 1) << std::endl;
   std::cout << minimum.min*2 << std::endl;
+  
+  for (long i = 0; i < m; i++)
+    delete[] space_matrix[i];
+  delete[] space_matrix;
 }
 
 bool test_stub(long max_rand = 10, long max_number=3)
@@ -182,6 +180,10 @@ bool test_stub(long max_rand = 10, long max_number=3)
   {
     std::cout << "tested: ok" << std::endl;
   }
+  for (long i = 0; i < m; i++)
+    delete[] space_matrix[i];
+  delete[] space_matrix;
+  
   return true;
 }
 
