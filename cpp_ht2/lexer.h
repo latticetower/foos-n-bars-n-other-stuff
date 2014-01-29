@@ -6,18 +6,9 @@
 #include <vector>
 #include <set>
 
-enum TokenType {
-  VAR, NUMBER, ASSIGN, 
-  RBRACKET, LBRACKET, 
-  IF, WHILE, RETURN, DEF, COLON,
-  PLUS, MINUS, MULT, DIV, 
-  LESS, GREATER, LEQ, GEQ, EQ, NEQ, 
-  READ, PRINT,
-  END, 
-  ENDOFFILE
-};
+#include "basic_types.h"
 
-typedef std::pair<TokenType, std::string> TokenInfo;
+
 
 class Lexer{
 

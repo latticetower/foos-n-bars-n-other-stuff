@@ -1,13 +1,18 @@
 #pragma once
+#include "basic_types.h"
 #include "lexer.h"
-
+#include "context.h"
 #include "base.h"
 #include "io.h"
 #include "operations.h"
 #include "conditional.h"
+#include "error_handling.h"
+
+
 
 class Parser{
   Lexer* lexer;
+  std::vector<IOp*> _expressions;
   TokenInfo lastOperand;
 public:
   Parser(Lexer * l): lexer(l) {
@@ -19,14 +24,15 @@ public:
   IOp* getNextExpression(Lexer* lexer);
 
   void Parse() {
-    
    //Operand o1 = first
-    std::vector<IOp*> expressions = getExpressionsSequence(lexer);
-    for (std::vector<IOp*>::iterator iter = expressions.begin(); iter!=expressions.end(); ++iter) {
-      std::cout << "------------" << std::endl << "expr" << std::endl;
-      (*iter)->print();
-    }
+    _expressions = getExpressionsSequence(lexer);
+    //for (std::vector<IOp*>::iterator iter = _expressions.begin(); iter != _expressions.end(); ++iter) {
+    //  std::cout << "------------" << std::endl << "expr" << std::endl;
+    //  (*iter)->print();
+    //}
   }
+  
+  void ComputeAll(Context* c);
 
 
 private:

@@ -8,7 +8,7 @@ IOp* Parser::getRead(Lexer* lexer) {
     IOp * op1 = new ReadOp(var);
     return op1;
   }
-  return new InvalidOp();
+  return new InvalidOp(ErrorType::UNKNOWN);
 }
 
 IOp* Parser::getPrint(Lexer* lexer) {
@@ -19,7 +19,7 @@ IOp* Parser::getPrint(Lexer* lexer) {
     op1 = new PrintOp(op1);
     return op1;
   }
-  return new InvalidOp();
+  return new InvalidOp(ErrorType::UNKNOWN);
 }
 
 // =
@@ -34,7 +34,7 @@ IOp* Parser::getAssignment(Lexer* lexer) {
       return op1;
     }
   }
-  return new InvalidOp();
+  return new InvalidOp(ErrorType::UNKNOWN);
 }
 
 
@@ -102,7 +102,7 @@ IOp* Parser::getExprPrior3(Lexer* lexer) {
     if (t.first!= TokenType::ENDOFFILE)
       result = new BasicOp(lexer->getNextToken());
     else {
-      result = new InvalidOp();
+      result = new InvalidOp(ErrorType::UNKNOWN);
     }
   }
   
@@ -126,7 +126,7 @@ IOp* Parser::getCondition(Lexer* lexer) {
     op1 = new ConditionOp(op1, op2, var);
     return op1;
   }
-  return new InvalidOp();
+  return new InvalidOp(ErrorType::UNKNOWN);
 }
 
 
@@ -144,7 +144,7 @@ IOp* Parser::getIf(Lexer* lexer) {
     var = lexer->getNextToken();//END
     return new IfOp(cond, sequence);
   }
-  return new InvalidOp();
+  return new InvalidOp(ErrorType::UNKNOWN);
 }
 
 
@@ -162,7 +162,7 @@ IOp* Parser::getWhile(Lexer* lexer) {
     var = lexer->getNextToken();//END
     return new WhileOp(cond, sequence);
   }
-  return new InvalidOp();
+  return new InvalidOp(ErrorType::UNKNOWN);
 }
 
 IOp *Parser::getNextExpression(Lexer* lexer) {
@@ -194,7 +194,7 @@ IOp *Parser::getNextExpression(Lexer* lexer) {
     op = getWhile(lexer);
     return op;
   }
-  return new InvalidOp();
+  return new InvalidOp(ErrorType::UNKNOWN);
 }
 
 
@@ -212,4 +212,10 @@ std::vector<IOp*> Parser::getExpressionsSequence(Lexer* lexer) {
       ti = lexer->peekNextToken();
     }
   return expr;
+}
+
+void Parser::ComputeAll(Context* context) {
+  for (std::vector<IOp*>::iterator iter = _expressions.begin(); iter != _expressions.end(); ++iter) {
+    (*iter)->Compute(context);
+  }
 }

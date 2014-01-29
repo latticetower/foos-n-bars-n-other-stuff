@@ -1,40 +1,60 @@
 #pragma once
-#include "lexer.h"
+#include <utility>
 #include <iostream>
+#include "basic_types.h"
+#include "lexer.h"
+#include "context.h"
+// #include "error_handling.h"
 
 class IOp{
+  ErrorType _last_error;
+protected:
+  void setLastError(ErrorType last_error) {
+    _last_error = last_error;
+  }
 public:
-  IOp() { }
-  int Compute() {
-    return 0;
+  IOp() {
+    setLastError(ErrorType::UNKNOWN); 
   }
-  void getLastError() {
+  
+
+  ErrorType getLastError(){
+    return _last_error;
   }
-  virtual void print() =0;
+
+  virtual int Compute(IContext* context) = 0;
+  virtual void print() = 0;
   
   bool valid() {
     return true;
   }
 };
-class InvalidOp: public IOp {
-public: 
-  bool valid() {
-    return false;
-  }
-  void print() {
-    std::cout << "InvalidOp!" << std::endl;
-  }
-};
+
+
 
 class BasicOp: public IOp {
   TokenInfo _value;
 public:
-  BasicOp(TokenInfo ti): _value(ti) {  }
+  BasicOp(TokenInfo ti): _value(ti) { 
+    setLastError(ErrorType::OK); 
+  }
 
-  int Compute() {
+  int Compute(IContext* context) {
     if (_value.first == TokenType::NUMBER) {
+      setLastError(ErrorType::OK);
       return atoi(_value.second.c_str());
+    } 
+    else {
+      if (_value.first == TokenType::VAR) {
+        if (context != NULL) {
+          //TODO: should also check here function names. or not)
+          int vi = context->getValue(_value.second);
+          setLastError(context->getLastError());
+          return vi;
+        }
+      }
     }
+    setLastError(ErrorType::UNDEF_VARIABLE);
     return 0;
   }
 
