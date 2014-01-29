@@ -2,39 +2,39 @@
 
 IOp* Parser::getRead(Lexer* lexer) {
   TokenInfo var = lexer->peekNextToken();
-  if (var.first == TokenType::READ) {
+  if (var.type == READ) {
     lexer->getNextToken();
     TokenInfo var = lexer->getNextToken(); //TODO:add check
-    IOp * op1 = new ReadOp(var);
+    IOp* op1 = new ReadOp(var);
     return op1;
   }
-  return new InvalidOp(ErrorType::UNKNOWN);
+  return new InvalidOp(UNKNOWN, 0);
 }
 
 IOp* Parser::getPrint(Lexer* lexer) {
   TokenInfo var = lexer->peekNextToken();
-  if (var.first == TokenType::PRINT) {
+  if (var.type == PRINT) {
     lexer->getNextToken();
-    IOp * op1 = getExpr(lexer);
+    IOp* op1 = getExpr(lexer);
     op1 = new PrintOp(op1);
     return op1;
   }
-  return new InvalidOp(ErrorType::UNKNOWN);
+  return new InvalidOp(UNKNOWN, 0);
 }
 
 // =
 IOp* Parser::getAssignment(Lexer* lexer) {
   TokenInfo var = lexer->peekNextToken();
-  if (var.first == TokenType::VAR) {
+  if (var.type == VAR) {
     lexer->getNextToken();
-    if (lexer->peekNextToken().first == TokenType::ASSIGN) {
+    if (lexer->peekNextToken().type == ASSIGN) {
       lexer->getNextToken();
-      IOp * op1 = getExpr(lexer);
+      IOp* op1 = getExpr(lexer);
       op1 = new AssignOp(var, op1);
       return op1;
     }
   }
-  return new InvalidOp(ErrorType::UNKNOWN);
+  return new InvalidOp(UNKNOWN, 0);
 }
 
 
@@ -46,21 +46,29 @@ IOp* Parser::getExpr(Lexer* lexer) {
 
 // +, -
 IOp* Parser::getExprPrior1(Lexer* lexer) {
-  IOp* op1 = getExprPrior2(lexer);
+  //check for unary -
+  TokenInfo ti = lexer->peekNextToken();
+  IOp* op1 = NULL;
+  if (ti.type == MINUS){
+    op1 = new BasicOp(TokenInfo(TokenType::NUMBER, "0", ti.line));
+  }
+  else {
+    op1 = getExprPrior2(lexer);
+  }
   if (!op1->valid())
     return op1;
   TokenInfo current_operation = lexer->peekNextToken();
-  while (current_operation.first  == TokenType::PLUS || current_operation.first == TokenType::MINUS) {
+  while (current_operation.type  == PLUS || current_operation.type == MINUS) {
     lexer->getNextToken();
     IOp* op2 = getExprPrior2(lexer);
-    if (current_operation.first == TokenType::PLUS) {
+    if (current_operation.type == PLUS) {
       op1 = new PlusOp(op1, op2);
     }
-    if (current_operation.first == TokenType::MINUS) {
+    if (current_operation.type == MINUS) {
       op1 = new MinusOp(op1, op2);
     }
     current_operation = lexer->peekNextToken();
-    if (current_operation.first == TokenType::ENDOFFILE)
+    if (current_operation.type == ENDOFFILE)
       break;
   }
   return op1;
@@ -74,13 +82,13 @@ IOp* Parser::getExprPrior2(Lexer* lexer) {
     return op1;
   }
   TokenInfo current_operation = lexer->peekNextToken();
-  while (current_operation.first == TokenType::MULT || current_operation.first == TokenType::DIV) {
+  while (current_operation.type == MULT || current_operation.type == DIV) {
     lexer->getNextToken();
     IOp* op2 = getExprPrior3(lexer);
-    if (current_operation.first == TokenType::MULT) {
+    if (current_operation.type == MULT) {
       op1 = new MultOp(op1, op2);
     }
-    if (current_operation.first == TokenType::DIV) {
+    if (current_operation.type == DIV) {
       op1 = new DivideOp(op1, op2);
     }
     current_operation = lexer->peekNextToken();
@@ -93,16 +101,16 @@ IOp* Parser::getExprPrior2(Lexer* lexer) {
 IOp* Parser::getExprPrior3(Lexer* lexer) {
   IOp* result;
   TokenInfo t = lexer->peekNextToken();
-  if (t.first == TokenType::LBRACKET) {
+  if (t.type == LBRACKET) {
     lexer->getNextToken();
     result = getExprPrior1(lexer);
     lexer->getNextToken();//TODO: add check for rbracket
   }
   else {
-    if (t.first!= TokenType::ENDOFFILE)
+    if (t.type != ENDOFFILE)
       result = new BasicOp(lexer->getNextToken());
     else {
-      result = new InvalidOp(ErrorType::UNKNOWN);
+      result = new InvalidOp(UNKNOWN, t.line);
     }
   }
   
@@ -112,110 +120,177 @@ IOp* Parser::getExprPrior3(Lexer* lexer) {
 ///conditions
 
 IOp* Parser::getCondition(Lexer* lexer) {
-  IOp * op1 = getExpr(lexer);
+  IOp* op1 = getExpr(lexer);
   TokenInfo var = lexer->peekNextToken();
-  if (var.first == TokenType::EQ ||
-      var.first == TokenType::NEQ || 
-      var.first == TokenType::GREATER ||
-      var.first == TokenType::GEQ ||
-      var.first == TokenType::LESS ||
-      var.first == TokenType::LEQ) {
+  if (var.type == EQ ||
+      var.type == NEQ || 
+      var.type == GREATER ||
+      var.type == GEQ ||
+      var.type == LESS ||
+      var.type == LEQ) {
 
     lexer->getNextToken();
-    IOp * op2 = getExpr(lexer);
+    IOp* op2 = getExpr(lexer);
     op1 = new ConditionOp(op1, op2, var);
     return op1;
   }
-  return new InvalidOp(ErrorType::UNKNOWN);
+  return new InvalidOp(SYNTAX, var.line);
 }
 
 
 IOp* Parser::getIf(Lexer* lexer) {
   TokenInfo var = lexer->peekNextToken();
-  if (var.first == TokenType::IF) {
+  if (var.type == IF) {
     lexer->getNextToken();
     IOp* cond = getCondition(lexer);
     var = lexer->getNextToken();
-    if (var.first != TokenType::COLON) {
+    if (var.type != COLON) {
       //report error
+      return new InvalidOp(SYNTAX, var.line);
     }
     
-    std::vector<IOp*> sequence = getExpressionsSequence(lexer);
+    std::vector<IOp* > sequence = getExpressionsSequence(lexer);
     var = lexer->getNextToken();//END
     return new IfOp(cond, sequence);
   }
-  return new InvalidOp(ErrorType::UNKNOWN);
+  return new InvalidOp(UNKNOWN, var.line);
 }
 
 
 IOp* Parser::getWhile(Lexer* lexer) {
   TokenInfo var = lexer->peekNextToken();
-  if (var.first == TokenType::WHILE) {
+  if (var.type == WHILE) {
     lexer->getNextToken();
     IOp* cond = getCondition(lexer);
     var = lexer->getNextToken();
-    if (var.first != TokenType::COLON) {
+    if (var.type != COLON) {
       //report error
+      return new InvalidOp(SYNTAX, var.line);
     }
     
-    std::vector<IOp*> sequence = getExpressionsSequence(lexer);
+    std::vector<IOp* > sequence = getExpressionsSequence(lexer);
     var = lexer->getNextToken();//END
     return new WhileOp(cond, sequence);
   }
-  return new InvalidOp(ErrorType::UNKNOWN);
+  return new InvalidOp(UNKNOWN, var.line);
 }
 
-IOp *Parser::getNextExpression(Lexer* lexer) {
+IOp* Parser::getFunctionDef(Lexer*lexer) {
+  TokenInfo var = lexer->peekNextToken();
+  if (var.type == DEF) {
+    lexer->getNextToken();
+    TokenInfo function_name = lexer->getNextToken();
+
+    var = lexer->getNextToken();
+    if (var.type != LBRACKET) {
+      //report error
+      return new InvalidOp(SYNTAX, var.line);
+    }
+    std::vector<std::string> function_parameters_names;
+    var = lexer->getNextToken();
+    while (var.type != RBRACKET && var.type != ENDOFFILE) {
+      function_parameters_names.push_back(var.token);
+      var = lexer->getNextToken();
+    }
+    var = lexer->getNextToken();//COLON
+    if (var.type != COLON) {
+      return new InvalidOp(SYNTAX, var.line);
+    }
+    std::vector<IOp* > sequence = getExpressionsSequence(lexer);
+    var = lexer->getNextToken();//END
+    return new FunctionDefOp(function_name.token, function_parameters_names, sequence);
+  }
+  return new InvalidOp(SYNTAX, var.line);
+}
+
+IOp* Parser::getFunctionCall(Lexer* lexer) {
+/*  TokenInfo var = lexer->peekNextToken();
+  if (var.type == DEF) {
+    lexer->getNextToken();
+    TokenInfo function_name = lexer->getNextToken();
+
+    var = lexer->getNextToken();
+    if (var.type != LBRACKET) {
+      //report error
+      return new InvalidOp(SYNTAX, var.line);
+    }
+    std::vector<std::string> function_parameters_names;
+    var = lexer->getNextToken();
+    while (var.type != RBRACKET && var.type != ENDOFFILE) {
+      function_parameters_names.push_back(var.token);
+      var = lexer->getNextToken();
+    }
+
+    std::vector<IOp* > sequence = getExpressionsSequence(lexer);
+    var = lexer->getNextToken();//END
+    return new FunctionDefOp(function_name.token, function_parameters_names, sequence);
+  }*/
+  return new InvalidOp(SYNTAX, 0);
+}
+
+IOp* Parser::getNextExpression(Lexer* lexer) {
   TokenInfo ti = lexer->peekNextToken();
   IOp* op;
-  if (ti.first == TokenType::VAR) {
+  if (ti.type == VAR) {
     op = getAssignment(lexer);
     return op;
     //op->print();
     //std::cout << "-------------------" << std::endl;   
   }
-  if (ti.first == TokenType::PRINT) {
+  if (ti.type == PRINT) {
     op = getPrint(lexer);
     return op;
   //  op->print();
   //  std::cout << "-------------------" << std::endl;
   }
-  if (ti.first == TokenType::READ) {
+  if (ti.type == READ) {
     op = getRead(lexer);
     return op;
     //op->print();
     //std::cout << "-------------------" << std::endl;
   }
-  if (ti.first == TokenType::IF) {
+  if (ti.type == IF) {
     op = getIf(lexer);
     return op;
   }
-  if (ti.first == TokenType::WHILE) {
+  if (ti.type == WHILE) {
     op = getWhile(lexer);
     return op;
   }
-  return new InvalidOp(ErrorType::UNKNOWN);
+  if (ti.type == DEF) {
+    op = getFunctionDef(lexer);
+    _functions.push_back(std::auto_ptr<IOp>(op));
+    //
+    return new BasicOp(TokenInfo(NUMBER, "0", ti.line));
+  }
+  return new InvalidOp(SYNTAX, ti.line);
 }
 
 
-std::vector<IOp*> Parser::getExpressionsSequence(Lexer* lexer) {
+std::vector<IOp* > Parser::getExpressionsSequence(Lexer* lexer) {
   TokenInfo ti = lexer->peekNextToken();
-  std::vector<IOp*> expr;
+  std::vector<IOp* > expr;
    //Operand o1 = first
-  while (ti.first != TokenType::ENDOFFILE && ti.first != TokenType::END) {
-      IOp* op = getNextExpression(lexer);
-      expr.push_back(op);
+  while (ti.type != ENDOFFILE && ti.type != END) {
+    IOp* op = getNextExpression(lexer);
+    expr.push_back(op);
+    if (op->getLastError() != OK) {
+      //clear vector
+      //add only member - current error
+      op->getErrorInfo();
+      break;
+    }
       //temporary
       //IOp* op = getCondition(lexer);
       //op->print();
       //std::cout << "-------------------" << std::endl;
-      ti = lexer->peekNextToken();
-    }
+    ti = lexer->peekNextToken();
+  }
   return expr;
 }
 
 void Parser::ComputeAll(Context* context) {
-  for (std::vector<IOp*>::iterator iter = _expressions.begin(); iter != _expressions.end(); ++iter) {
+  for (std::vector<std::auto_ptr<IOp> >::iterator iter = _expressions.begin(); iter != _expressions.end(); ++iter) {
     (*iter)->Compute(context);
   }
 }

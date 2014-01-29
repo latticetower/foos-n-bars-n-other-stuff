@@ -6,13 +6,24 @@
 
 
 class InvalidOp: public IOp {
-  std::string _info;
+  // std::string _info;
+  ErrorInfo _info;
 public: 
-  InvalidOp(): _info("") {}
-  InvalidOp(ErrorType error): _info("") { setLastError(error); }
-  InvalidOp(ErrorType error, const char* error_info): _info(error_info) { setLastError(error); }
+  InvalidOp(): _info() {}
+  InvalidOp(ErrorType error, int line_no): _info(error, line_no) { setLastError(error); }
+  InvalidOp(ErrorType error, const char* error_info, int line_no): _info(error, line_no, error_info) { setLastError(error); }
+
   int Compute(IContext* context) {
     return 0;
+  }
+
+  const ErrorInfo getErrorInfo() {
+    return ErrorInfo();
+  }
+
+  void setErrorInfo(ErrorInfo ei) {
+    _info.line = ei.line;
+    _info.location = std::string(ei.location);
   }
 
   bool valid() {

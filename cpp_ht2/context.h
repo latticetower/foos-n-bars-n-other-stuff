@@ -11,7 +11,7 @@ protected:
   }
 public:
   IContext() {
-    setLastError(ErrorType::UNKNOWN);
+    setLastError(UNKNOWN);
   }
   ErrorType getLastError() {
     return _error;

@@ -11,40 +11,40 @@ public:
   ReadOp(TokenInfo var): _variable(var) { }
 
   int Compute(IContext* context) {
-    setLastError(ErrorType::OK);
+    setLastError(OK);
     int expr_result = 0;
     std::cin >> expr_result;
     if (context == NULL) {
-      setLastError(ErrorType::UNKNOWN);
+      setLastError(UNKNOWN);
       return 0;
     }
-    context->setVariable(_variable.second, expr_result);
+    context->setVariable(_variable.token, expr_result);
     // TODO: should create new variable in current context
     return expr_result;
   }
 
   void print() {
-    std::cout << "ReadOp:" << _variable.second << std::endl; 
+    std::cout << "ReadOp:" << _variable.token << std::endl; 
   }
   bool valid() {
-    return _variable.first == TokenType::VAR;
+    return _variable.type == VAR;
   }
 };
 
-class PrintOp:public IOp {
-  IOp * _value;
+class PrintOp: public IOp {
+  std::auto_ptr<IOp> _value;
 public:
   PrintOp(): _value(NULL) {}
   PrintOp(IOp* op): _value(op) {  }
   
   int Compute(IContext* context) {
     int expr_result = _value->Compute(context);
-    if (_value->getLastError() != ErrorType::OK) {
+    if (_value->getLastError() != OK) {
       setLastError(_value->getLastError());
       return 0;
     }
     std::cout << expr_result << std::endl;
-    setLastError(ErrorType::OK);
+    setLastError(OK);
     return expr_result;
   }
 

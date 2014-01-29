@@ -13,7 +13,14 @@ enum TokenType {
   ENDOFFILE
 };
 
-typedef std::pair<TokenType, std::string> TokenInfo;
+//typedef std::pair<TokenType, std::string> TokenInfo;
+struct TokenInfo {
+  TokenType    type;
+  std::string token;
+  int line;
+  TokenInfo(): type(NUMBER), token("0"), line(0) {}
+  TokenInfo(TokenType _type, std::string _token, int _line): type(_type), token(_token), line(_line) { }
+};
 
 enum ErrorType {
   OK,
@@ -25,5 +32,18 @@ enum ErrorType {
   UNKNOWN // in case if aliens stole my baby
 };
 
-typedef std::pair<ErrorType, int> VariableInfo;
 
+struct ErrorInfo{
+  ErrorType type;
+  std::string location;
+  int line;
+  ErrorInfo(): type(OK), location(""), line(0) {}
+  ErrorInfo(ErrorType et, int _line): type(et), location(""), line(_line) {}
+  ErrorInfo(ErrorType et, int _line, std::string _location):  type(et), location(_location), line(_line) {}
+  
+  void setLocation(std::string const & _location) {
+    location = std::string(_location);
+  }
+};
+
+typedef std::pair<ErrorType, int> VariableInfo;

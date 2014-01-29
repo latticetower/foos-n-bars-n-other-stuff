@@ -24,14 +24,14 @@ void Context::setVariable(std::string const& variable, int value) {
 int Context::getValue(std::string const& variable) {
   std::map<std::string, int>::iterator iter_value = _variables_hash.find(variable);
   if (iter_value != _variables_hash.end()) {
-    setLastError(ErrorType::OK);
+    setLastError(OK);
     return (*iter_value).second;
   }
   if (_parent_context != NULL) {
     setLastError(_parent_context->getLastError());
     return _parent_context->getValue(variable);
   }
-  setLastError(ErrorType::UNDEF_VARIABLE);
+  setLastError(UNDEF_VARIABLE);
   return 0;
 }
 

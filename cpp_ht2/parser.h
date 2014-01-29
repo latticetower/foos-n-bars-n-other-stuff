@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include "basic_types.h"
 #include "lexer.h"
 #include "context.h"
@@ -7,16 +8,17 @@
 #include "operations.h"
 #include "conditional.h"
 #include "error_handling.h"
-
+#include "functions.h"
 
 
 class Parser{
   Lexer* lexer;
-  std::vector<IOp*> _expressions;
-  TokenInfo lastOperand;
+  std::vector<std::auto_ptr<IOp> > _expressions;
+  std::vector<std::auto_ptr<IOp> > _functions;
+  // TokenInfo lastOperand;
 public:
   Parser(Lexer * l): lexer(l) {
-    lastOperand = std::make_pair(TokenType::END, "");
+   // lastOperand = TokenInfo(END, "", 0); //TODO: check if unused
   }
   
   std::vector<IOp*> getExpressionsSequence(Lexer* lexer);
@@ -25,7 +27,11 @@ public:
 
   void Parse() {
    //Operand o1 = first
-    _expressions = getExpressionsSequence(lexer);
+    std::vector<IOp*> exp = getExpressionsSequence(lexer);
+    _expressions.resize(exp.size());
+    for (int i = 0; i < exp.size(); i++) {
+      _expressions[i] = std::auto_ptr<IOp>(exp[i]);
+    }
     //for (std::vector<IOp*>::iterator iter = _expressions.begin(); iter != _expressions.end(); ++iter) {
     //  std::cout << "------------" << std::endl << "expr" << std::endl;
     //  (*iter)->print();
@@ -50,5 +56,7 @@ private:
   IOp* getCondition(Lexer*lexer);
   IOp* getIf(Lexer*lexer);
   IOp* getWhile(Lexer*lexer);
+  IOp* getFunctionDef(Lexer*lexer);
+  IOp* getFunctionCall(Lexer*lexer);
 
 };

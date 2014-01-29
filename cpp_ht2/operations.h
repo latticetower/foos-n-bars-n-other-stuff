@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <memory>
 #include <vector>
 #include "basic_types.h"
 #include "context.h"
@@ -8,14 +9,14 @@
 #include "base.h"
 
 class PlusOp: public IOp {
-  IOp *_op1, *_op2;
+  std::auto_ptr<IOp> _op1, _op2;
 public:
-  PlusOp(IOp* op1, IOp* op2): _op1(op1), _op2(op2) {  }
+  PlusOp(IOp* op1, IOp* op2): _op1(op1), _op2(op2) {  setLastError(OK); }
 
   int Compute(IContext* context) {
     int op1_value = _op1->Compute(context);
     int op2_value = _op2->Compute(context);
-    setLastError(ErrorType::OK);
+    setLastError(OK);
     return op1_value + op2_value;
   }
 
@@ -32,22 +33,22 @@ public:
 };
 
 class MinusOp: public IOp {
-  IOp *_op1, *_op2;
+  std::auto_ptr<IOp> _op1, _op2;
 public:
-  MinusOp(IOp* op1, IOp* op2): _op1(op1), _op2(op2) {  }
+  MinusOp(IOp* op1, IOp* op2): _op1(op1), _op2(op2) {  setLastError(OK); }
 
   int Compute(IContext* context) {
     int op1_value = _op1->Compute(context);
-    if (_op1->getLastError() != ErrorType::OK) {
+    if (_op1->getLastError() != OK) {
       setLastError(_op1->getLastError());
       return 0;
     }
     int op2_value = _op2->Compute(context);
-    if (_op2->getLastError() != ErrorType::OK) {
+    if (_op2->getLastError() != OK) {
       setLastError(_op2->getLastError());
       return 0;
     }
-    setLastError(ErrorType::OK);
+    setLastError(OK);
     return op1_value - op2_value;
   }
 
@@ -65,22 +66,22 @@ public:
 };
 
 class MultOp: public IOp {
-  IOp *_op1, *_op2;
+  std::auto_ptr<IOp> _op1, _op2;
 public:
-  MultOp(IOp* op1, IOp* op2): _op1(op1), _op2(op2) {  }
+  MultOp(IOp* op1, IOp* op2):_op1(op1), _op2(op2) {  setLastError(OK); }
 
   int Compute(IContext* context) {
     int op1_value = _op1->Compute(context);
-    if (_op1->getLastError() != ErrorType::OK) {
+    if (_op1->getLastError() != OK) {
       setLastError(_op1->getLastError());
       return 0;
     }
     int op2_value = _op2->Compute(context);
-    if (_op2->getLastError() != ErrorType::OK) {
+    if (_op2->getLastError() != OK) {
       setLastError(_op2->getLastError());
       return 0;
     }
-    setLastError(ErrorType::OK);
+    setLastError(OK);
     return op1_value * op2_value;
   }
 
@@ -98,25 +99,25 @@ public:
 };
 
 class DivideOp: public IOp {
-  IOp *_op1, *_op2;
+  std::auto_ptr<IOp> _op1, _op2;
 public:
-  DivideOp(IOp* op1, IOp* op2): _op1(op1), _op2(op2) {  }
+  DivideOp(IOp* op1, IOp* op2): _op1(op1), _op2(op2) {  setLastError(OK); }
   int Compute(IContext* context) {
     int op1_value = _op1->Compute(context);
-    if (_op1->getLastError() != ErrorType::OK) {
+    if (_op1->getLastError() != OK) {
       setLastError(_op1->getLastError());
       return 0;
     }
     int op2_value = _op2->Compute(context);
-    if (_op2->getLastError() != ErrorType::OK) {
+    if (_op2->getLastError() != OK) {
       setLastError(_op2->getLastError());
       return 0;
     }
     if (op2_value == 0) {
-      setLastError(ErrorType::DIVISION_BY_ZERO);
+      setLastError(DIVISION_BY_ZERO);
       return 0;
     }
-    setLastError(ErrorType::OK);
+    setLastError(OK);
     return op1_value / op2_value;
   }
 
@@ -136,33 +137,34 @@ public:
 
 class AssignOp: public IOp {
   TokenInfo _variable;
-  IOp *_value;
+  std::auto_ptr<IOp> _value;
 public:
-  AssignOp(TokenInfo var, IOp* value): _variable(var), _value(value) {  }
+  AssignOp(TokenInfo var, IOp* value = NULL): _variable(var), _value(value) {  setLastError(OK); }
+ 
 
   int Compute(IContext* context) {
     int var_value = _value->Compute(context);
-    if (_value->getLastError() != ErrorType::OK) {
+    if (_value->getLastError() != OK) {
       setLastError(_value->getLastError());
       return 0;
     }
     if (context == NULL) {
-      setLastError(ErrorType::UNKNOWN);
+      setLastError(UNKNOWN);
       return 0;
     }
-    context->setVariable(_variable.second, var_value);
-    setLastError(ErrorType::OK);
+    context->setVariable(_variable.token, var_value);
+    setLastError(OK);
     //TODO: add variable context
     return var_value;
   }
   virtual void print() {
     std::cout << "Assign: " << std::endl;
-    std::cout << " var name: " << _variable.second << std::endl;
+    std::cout << " var name: " << _variable.token << std::endl;
     std::cout << " Assign op value: " << std::endl;
     _value->print();
   }
   bool valid() {
-    return  _variable.first == TokenType::VAR && _value->valid();
+    return  _variable.type == VAR && _value->valid();
   }
 };
 
