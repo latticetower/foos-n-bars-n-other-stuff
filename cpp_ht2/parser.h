@@ -30,14 +30,14 @@ public:
    //Operand o1 = first
     std::vector<IOp*> exp = getExpressionsSequence(lexer);
     _expressions.resize(exp.size());
-    for (int i = 0; i < exp.size(); i++) {
+    for (int i = 0; i < (int)exp.size(); i++) {
       _expressions[i] = std::unique_ptr<IOp>(exp[i]);
     }
     //for (std::vector<IOp*>::iterator iter = _expressions.begin(); iter != _expressions.end(); ++iter) {
     //  std::cout << "------------" << std::endl << "expr" << std::endl;
     //  (*iter)->print();
     //}
-    for (int i = 0; i < exp.size(); i++) {
+    for (int i = 0; i < (int)exp.size(); i++) {
       if (exp[i]->getLastError() != OK) {
         if (exp[i]->getLastError() == SYNTAX) {
           std::cout << "line " << exp[i]->getErrorInfo().line << ": syntax error." << std::endl;
@@ -67,6 +67,7 @@ private:
 
   IOp* getRead(Lexer* lexer);
   IOp* getPrint(Lexer* lexer);
+  IOp* getReturn(Lexer* lexer);
   //
   IOp* getCondition(Lexer*lexer);
   IOp* getIf(Lexer*lexer);

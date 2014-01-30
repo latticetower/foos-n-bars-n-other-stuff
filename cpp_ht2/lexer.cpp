@@ -23,8 +23,8 @@ void Lexer::printTokensToConsole(std::ostream& os) {
 }
 
 bool Lexer::isLastTokenInString() {
-  if (current_string < token_strings_list.size()) {
-    if (this->current_token + 1 < token_strings_list[current_string].size()) {
+  if (current_string < (int)token_strings_list.size()) {
+    if (current_token + 1 < (int)token_strings_list[current_string].size()) {
       return false;
     }
   }
@@ -33,12 +33,12 @@ bool Lexer::isLastTokenInString() {
 
 
 TokenInfo Lexer::peekNextToken() {
-  while (current_string < token_strings_list.size() && current_token >= token_strings_list[current_string].size()) {
+  while (current_string < (int)token_strings_list.size() && current_token >= (int)token_strings_list[current_string].size()) {
     current_string += 1;
     current_token = 0;
   }
     
-  if (current_string < token_strings_list.size()) {
+  if (current_string < (int)token_strings_list.size()) {
     std::vector<TokenInfo > str = token_strings_list[current_string];
     return str[current_token];
   }
@@ -57,7 +57,7 @@ void Lexer::processString(std::string const& unprocessed_string) {
   std::vector<TokenInfo> tokens;
   int line_no = token_strings_list.size() + 1;
 
-  for (int i = 0; i < unprocessed_string.length(); ++i) {
+  for (int i = 0; i < (int)unprocessed_string.length(); ++i) {
     letter = unprocessed_string[i];
     if (letter == '#')
       break;

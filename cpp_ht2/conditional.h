@@ -39,28 +39,21 @@ public:
     ResultInfo op1_value = _op1->Compute(context, _functions);
     ResultInfo op2_value = _op2->Compute(context, _functions);
     
-    switch (_oper.type) {
-    case EQ:
+    if (_oper.type == EQ)
       return op1_value == op2_value;
-      break;
-    case NEQ:
+    if (_oper.type == NEQ)
       return op1_value != op2_value;
-      break;
-    case GREATER:
+    if (_oper.type == GREATER)
       return op1_value > op2_value;
-      break;
-    case GEQ:
+    if (_oper.type == GEQ)
       return op1_value >= op2_value;
-      break;
-    case LESS:
+    if (_oper.type == LESS)
       return op1_value < op2_value;
-      break;
-    case LEQ:
+    if (_oper.type == LEQ)
       return op1_value <= op2_value;
-      break;
-    default:
-      return ResultInfo(0); //TODO: should return some error instead
-    }
+    //default:
+    //  return ResultInfo(0); //TODO: should return some error instead
+    
     return ResultInfo(0);
   }
 
@@ -81,7 +74,7 @@ public:
     setLastError(OK);
     //set up pointers ownership - to prevent memory loss:
     _statements.resize(statements.size());
-    for (int i = 0; i < statements.size(); i ++) {
+    for (int i = 0; i < (int)statements.size(); i ++) {
       _statements[i] = std::unique_ptr<IOp>(statements[i]);
     }
     //check for errors:
@@ -90,7 +83,7 @@ public:
       setErrorInfo(cond->getErrorInfo());
       return;
     }
-    for (int i = 0; i < statements.size(); i ++) {
+    for (int i = 0; i < (int)statements.size(); i ++) {
       if (statements[i]->getLastError() != OK) {
         setLastError(statements[i]->getLastError());
         setErrorInfo(statements[i]->getErrorInfo());
@@ -131,7 +124,7 @@ public:
     setLastError(OK);
     //set up pointers ownership - to prevent memory loss:
     _statements.resize(statements.size());
-    for (int i = 0; i < statements.size(); i ++) {
+    for (int i = 0; i < (int)statements.size(); i ++) {
       _statements[i] = std::unique_ptr<IOp>(statements[i]);
     }
     //check for errors:
@@ -140,7 +133,7 @@ public:
       setErrorInfo(cond->getErrorInfo());
       return;
     }
-    for (int i = 0; i < statements.size(); i ++) {
+    for (int i = 0; i < (int)statements.size(); i ++) {
       if (statements[i]->getLastError() != OK) {
         setLastError(statements[i]->getLastError());
         setErrorInfo(statements[i]->getErrorInfo());

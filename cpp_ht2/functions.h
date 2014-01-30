@@ -17,11 +17,11 @@ public:
     _param_names = function_parameter_names;
     //set up pointers ownership - to prevent memory loss:
     _statements.resize(statements.size());
-    for (int i = 0; i < statements.size(); i ++) {
+    for (int i = 0; i < (int)statements.size(); i ++) {
       _statements[i] = std::unique_ptr<IOp>(statements[i]);
     }
     //check for errors:
-    for (int i = 0; i < statements.size(); i ++) {
+    for (int i = 0; i < (int)statements.size(); i ++) {
       if (statements[i]->getLastError() != OK) {
         setLastError(statements[i]->getLastError());
         setErrorInfo(statements[i]->getErrorInfo());
@@ -61,7 +61,7 @@ public:
     _name = function_name.token;
     //set up pointers ownership - to prevent memory loss:
     _statements.resize(statements.size());
-    for (int i = 0; i < statements.size(); i ++) {
+    for (int i = 0; i < (int)statements.size(); i ++) {
       _statements[i] = std::unique_ptr<IOp>(statements[i]);
     }
     //check for errors:
@@ -70,7 +70,7 @@ public:
       setErrorInfo(ErrorInfo(function_name.line));
       return;
     }
-    for (int i = 0; i < statements.size(); i ++) {
+    for (int i = 0; i < (int)statements.size(); i ++) {
       if (statements[i]->getLastError() != OK) {
         setLastError(statements[i]->getLastError());
         setErrorInfo(statements[i]->getErrorInfo());
@@ -94,5 +94,30 @@ public:
         (*iter)->print(os);
     }
     
+  }
+};
+
+
+class ReturnOp: public IOp {
+  std::unique_ptr<IOp> _value;
+public:
+  ReturnOp() {}
+  ReturnOp(IOp* op): _value(op) { 
+    setLastError(op->getLastError()); 
+    setErrorInfo(op->getErrorInfo());
+  }
+  
+  ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+    ResultInfo expr_result = _value->Compute(context, _functions);
+    if (expr_result.error_type() != OK) {
+      return expr_result;
+    }
+    std::cout << expr_result.result << std::endl;
+    return expr_result;
+  }
+
+  void print(std::ostream& os) {
+    os << "ReturnOp:" << std::endl;
+    _value->print(os);    
   }
 };
