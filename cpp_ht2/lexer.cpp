@@ -2,7 +2,7 @@
 
 Lexer::Lexer() {
   alphabet = "_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  other_useful_tokens = "+-*/=><():";
+  other_useful_tokens = "!+-*/=><():";
   digits = "0123456789";
   std::string s2 = "+ - * / = == >= <= != > < ( ) :";
   std::istringstream iss(s2);

@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <memory>
 #include "basic_types.h"
 #include "lexer.h"
 #include "base.h"
@@ -8,9 +9,9 @@
 class ReadOp:public IOp {
   TokenInfo _variable;
 public:
-  ReadOp(TokenInfo var): _variable(var) { }
+  ReadOp(TokenInfo var): _variable(var) { setLastError(OK); }
 
-  int Compute(IContext* context) {
+  int Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
     setLastError(OK);
     int expr_result = 0;
     std::cin >> expr_result;
@@ -32,13 +33,13 @@ public:
 };
 
 class PrintOp: public IOp {
-  std::auto_ptr<IOp> _value;
+  std::unique_ptr<IOp> _value;
 public:
-  PrintOp(): _value(NULL) {}
-  PrintOp(IOp* op): _value(op) {  }
+  PrintOp() {}
+  PrintOp(IOp* op): _value(op) { setLastError(OK); }
   
-  int Compute(IContext* context) {
-    int expr_result = _value->Compute(context);
+  int Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+    int expr_result = _value->Compute(context, _functions);
     if (_value->getLastError() != OK) {
       setLastError(_value->getLastError());
       return 0;

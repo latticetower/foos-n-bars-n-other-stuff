@@ -21,12 +21,28 @@ IOp* Parser::getPrint(Lexer* lexer) {
   }
   return new InvalidOp(UNKNOWN, 0);
 }
-
-// =
-IOp* Parser::getAssignment(Lexer* lexer) {
+IOp* Parser::getAssignmentOrFunctionCall(Lexer*lexer) {
   TokenInfo var = lexer->peekNextToken();
   if (var.type == VAR) {
     lexer->getNextToken();
+    TokenInfo next = lexer->peekNextToken();
+    if (next.type == ASSIGN){
+      return getAssignment(lexer, var);
+    }
+    else{
+      if (next.type == LBRACKET) {
+        return getFunctionCall(lexer, var);
+      }
+    }
+    
+  }
+  return new InvalidOp(SYNTAX, 0);
+}
+// =
+IOp* Parser::getAssignment(Lexer* lexer, TokenInfo var) {
+  //TokenInfo var = lexer->peekNextToken();
+  if (var.type == VAR) {
+    //lexer->getNextToken();
     if (lexer->peekNextToken().type == ASSIGN) {
       lexer->getNextToken();
       IOp* op1 = getExpr(lexer);
@@ -34,7 +50,7 @@ IOp* Parser::getAssignment(Lexer* lexer) {
       return op1;
     }
   }
-  return new InvalidOp(UNKNOWN, 0);
+  return new InvalidOp(SYNTAX, 0);
 }
 
 
@@ -107,10 +123,16 @@ IOp* Parser::getExprPrior3(Lexer* lexer) {
     lexer->getNextToken();//TODO: add check for rbracket
   }
   else {
-    if (t.type != ENDOFFILE)
-      result = new BasicOp(lexer->getNextToken());
+    if (t.type != ENDOFFILE) {
+      TokenInfo var = lexer->getNextToken();
+      TokenInfo next = lexer ->peekNextToken();
+      if (var.type == VAR && next.type == LBRACKET) {
+        result = getFunctionCall(lexer, var);
+      }
+      else result = new BasicOp(var);
+    }
     else {
-      result = new InvalidOp(UNKNOWN, t.line);
+      result = new InvalidOp(SYNTAX, t.line);
     }
   }
   
@@ -203,28 +225,27 @@ IOp* Parser::getFunctionDef(Lexer*lexer) {
   return new InvalidOp(SYNTAX, var.line);
 }
 
-IOp* Parser::getFunctionCall(Lexer* lexer) {
-/*  TokenInfo var = lexer->peekNextToken();
-  if (var.type == DEF) {
+IOp* Parser::getFunctionCall(Lexer* lexer, TokenInfo var) {
+  TokenInfo next = lexer->peekNextToken();
+  if (next.type == LBRACKET) {
     lexer->getNextToken();
-    TokenInfo function_name = lexer->getNextToken();
-
-    var = lexer->getNextToken();
-    if (var.type != LBRACKET) {
+    
+    //if (var.type != LBRACKET) {
       //report error
-      return new InvalidOp(SYNTAX, var.line);
-    }
-    std::vector<std::string> function_parameters_names;
-    var = lexer->getNextToken();
-    while (var.type != RBRACKET && var.type != ENDOFFILE) {
-      function_parameters_names.push_back(var.token);
-      var = lexer->getNextToken();
+     // return new InvalidOp(SYNTAX, var.line);
+    //}
+    std::vector<IOp* > function_parameters;
+    next = lexer->peekNextToken();
+    while (next.type != RBRACKET && next.type != ENDOFFILE) {
+      IOp* param = this->getExpr(lexer);
+      function_parameters.push_back(param);
+      var = lexer->peekNextToken();
     }
 
-    std::vector<IOp* > sequence = getExpressionsSequence(lexer);
-    var = lexer->getNextToken();//END
-    return new FunctionDefOp(function_name.token, function_parameters_names, sequence);
-  }*/
+    next = lexer->getNextToken();//END
+    //TODO: check for RBRACKET and return syntax error
+    return new FunctionCallOp(var, function_parameters);
+  }
   return new InvalidOp(SYNTAX, 0);
 }
 
@@ -232,7 +253,7 @@ IOp* Parser::getNextExpression(Lexer* lexer) {
   TokenInfo ti = lexer->peekNextToken();
   IOp* op;
   if (ti.type == VAR) {
-    op = getAssignment(lexer);
+    op = getAssignmentOrFunctionCall(lexer);
     return op;
     //op->print();
     //std::cout << "-------------------" << std::endl;   
@@ -259,7 +280,7 @@ IOp* Parser::getNextExpression(Lexer* lexer) {
   }
   if (ti.type == DEF) {
     op = getFunctionDef(lexer);
-    _functions.push_back(std::auto_ptr<IOp>(op));
+    _functions[op->getName()] = std::unique_ptr<IOp>(op);
     //
     return new BasicOp(TokenInfo(NUMBER, "0", ti.line));
   }
@@ -290,7 +311,7 @@ std::vector<IOp* > Parser::getExpressionsSequence(Lexer* lexer) {
 }
 
 void Parser::ComputeAll(Context* context) {
-  for (std::vector<std::auto_ptr<IOp> >::iterator iter = _expressions.begin(); iter != _expressions.end(); ++iter) {
-    (*iter)->Compute(context);
+  for (std::vector<std::unique_ptr<IOp> >::iterator iter = _expressions.begin(); iter != _expressions.end(); ++iter) {
+    (*iter)->Compute(context, _functions);
   }
 }

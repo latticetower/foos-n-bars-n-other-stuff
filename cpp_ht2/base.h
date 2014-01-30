@@ -9,21 +9,28 @@
 class IOp{
   ErrorType _last_error;
   ErrorInfo _info;
+  std::string _name;
 protected:
   void setLastError(ErrorType last_error) {
     _last_error = last_error;
   }
+  void setName(std::string const & c) {
+    _name = std::string(c);
+  }
 public:
   IOp() {
-    setLastError(UNKNOWN); 
+    setLastError(OK); 
+    _name = "";
   }
-  
+  std::string const& getName() {
+    return _name;
+  }
 
   ErrorType getLastError(){
     return _last_error;
   }
 
-  virtual int Compute(IContext* context) = 0;
+  virtual int Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) = 0;
   virtual void print() = 0;
   
   virtual const ErrorInfo getErrorInfo() {
@@ -43,11 +50,9 @@ public:
 class BasicOp: public IOp {
   TokenInfo _value;
 public:
-  BasicOp(TokenInfo ti): _value(ti) { 
-    setLastError(OK); 
-  }
+  BasicOp(TokenInfo ti): _value(ti) { }
 
-  int Compute(IContext* context) {
+  int Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
     if (_value.type == NUMBER) {
       setLastError(OK);
       return atoi(_value.token.c_str());

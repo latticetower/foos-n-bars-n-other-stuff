@@ -9,13 +9,13 @@
 #include "base.h"
 
 class PlusOp: public IOp {
-  std::auto_ptr<IOp> _op1, _op2;
+  std::unique_ptr<IOp> _op1, _op2;
 public:
   PlusOp(IOp* op1, IOp* op2): _op1(op1), _op2(op2) {  setLastError(OK); }
 
-  int Compute(IContext* context) {
-    int op1_value = _op1->Compute(context);
-    int op2_value = _op2->Compute(context);
+  int Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+    int op1_value = _op1->Compute(context, _functions);
+    int op2_value = _op2->Compute(context, _functions);
     setLastError(OK);
     return op1_value + op2_value;
   }
@@ -33,17 +33,17 @@ public:
 };
 
 class MinusOp: public IOp {
-  std::auto_ptr<IOp> _op1, _op2;
+  std::unique_ptr<IOp> _op1, _op2;
 public:
   MinusOp(IOp* op1, IOp* op2): _op1(op1), _op2(op2) {  setLastError(OK); }
 
-  int Compute(IContext* context) {
-    int op1_value = _op1->Compute(context);
+  int Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+    int op1_value = _op1->Compute(context, _functions);
     if (_op1->getLastError() != OK) {
       setLastError(_op1->getLastError());
       return 0;
     }
-    int op2_value = _op2->Compute(context);
+    int op2_value = _op2->Compute(context, _functions);
     if (_op2->getLastError() != OK) {
       setLastError(_op2->getLastError());
       return 0;
@@ -66,17 +66,17 @@ public:
 };
 
 class MultOp: public IOp {
-  std::auto_ptr<IOp> _op1, _op2;
+  std::unique_ptr<IOp> _op1, _op2;
 public:
   MultOp(IOp* op1, IOp* op2):_op1(op1), _op2(op2) {  setLastError(OK); }
 
-  int Compute(IContext* context) {
-    int op1_value = _op1->Compute(context);
+  int Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+    int op1_value = _op1->Compute(context, _functions);
     if (_op1->getLastError() != OK) {
       setLastError(_op1->getLastError());
       return 0;
     }
-    int op2_value = _op2->Compute(context);
+    int op2_value = _op2->Compute(context, _functions);
     if (_op2->getLastError() != OK) {
       setLastError(_op2->getLastError());
       return 0;
@@ -99,16 +99,16 @@ public:
 };
 
 class DivideOp: public IOp {
-  std::auto_ptr<IOp> _op1, _op2;
+  std::unique_ptr<IOp> _op1, _op2;
 public:
   DivideOp(IOp* op1, IOp* op2): _op1(op1), _op2(op2) {  setLastError(OK); }
-  int Compute(IContext* context) {
-    int op1_value = _op1->Compute(context);
+  int Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+    int op1_value = _op1->Compute(context, _functions);
     if (_op1->getLastError() != OK) {
       setLastError(_op1->getLastError());
       return 0;
     }
-    int op2_value = _op2->Compute(context);
+    int op2_value = _op2->Compute(context, _functions);
     if (_op2->getLastError() != OK) {
       setLastError(_op2->getLastError());
       return 0;
@@ -137,13 +137,13 @@ public:
 
 class AssignOp: public IOp {
   TokenInfo _variable;
-  std::auto_ptr<IOp> _value;
+  std::unique_ptr<IOp> _value;
 public:
   AssignOp(TokenInfo var, IOp* value = NULL): _variable(var), _value(value) {  setLastError(OK); }
  
 
-  int Compute(IContext* context) {
-    int var_value = _value->Compute(context);
+  int Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+    int var_value = _value->Compute(context, _functions);
     if (_value->getLastError() != OK) {
       setLastError(_value->getLastError());
       return 0;

@@ -35,6 +35,7 @@ class Context: public IContext {
 public:
   Context(IContext* parent = NULL) { 
     _parent_context = parent;
+    setLastError(OK);
   }
   
   //adds variable to context hash
