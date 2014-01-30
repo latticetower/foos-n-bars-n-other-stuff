@@ -13,8 +13,14 @@ Lexer lexer;
 Context globalContext(NULL);
 
 int main(int argc, char**argv) {
-  std::string s;
-  lexer.loadFromFile(argv[1]);
+  if (argc < 2) {
+    std::cout << "Please, provide file name as a parameter" << std::endl;
+    return 0;
+  }
+  if (!lexer.loadFromFile(argv[1])) {
+    std::cout << "Please, provide _valid_ file name as a parameter" << std::endl;
+    return 0;
+  }
   //lexer.printTokensToConsole(std::cout);
   Parser p(&lexer);
   if (!p.Parse())

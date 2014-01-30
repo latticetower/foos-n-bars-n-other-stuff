@@ -89,7 +89,7 @@ IOp* Parser::getExprPrior1(Lexer* lexer) {
   TokenInfo ti = lexer->peekNextToken();
   IOp* op1 = NULL;
   if (ti.type == MINUS){
-    op1 = new BasicOp(TokenInfo(TokenType::NUMBER, "0", ti.line));
+    op1 = new BasicOp(TokenInfo(NUMBER, "0", ti.line));
   }
   else {
     op1 = getExprPrior2(lexer);
@@ -155,10 +155,10 @@ IOp* Parser::getExprPrior3(Lexer* lexer) {
   if (t.type == LBRACKET) {
     lexer->getNextToken();
     result = getExprPrior1(lexer);
-    lexer->getNextToken();//TODO: add check for rbracket
+    lexer->getNextToken(); // TODO: add check for rbracket
   }
   else {
-    if (t.type != ENDOFFILE) {
+    if (t.type == VAR || t.type == NUMBER) {
       TokenInfo var = lexer->getNextToken();
       TokenInfo next = lexer ->peekNextToken();
       if (var.type == VAR) {
@@ -316,7 +316,7 @@ IOp* Parser::getFunctionCall(Lexer* lexer, TokenInfo var) {
         return param;
       }
       function_parameters.push_back(param);
-      var = lexer->peekNextToken();
+      next = lexer->peekNextToken();
     }
 
     next = lexer->getNextToken();// RBRACKET
@@ -400,9 +400,9 @@ void Parser::printErrorMessage(ResultInfo ei) {
   if (ei.error_type() == UNKNOWN)
     std::cout << "unknown error occured.";
   if (ei.error_type() == UNDEF_VARIABLE)
-    std::cout << "undefined variable " << ei.error_info.location << ".";
+    std::cout << "undefined variable " << ei.object_name << ".";
   if (ei.error_type() == UNDEF_FUNCTION)
-    std::cout << "undefined function " << ei.error_info.location << ".";
+    std::cout << "undefined function " << ei.object_name << ".";
   if (ei.error_type() == SYNTAX)
     std::cout << "syntax error.";
   if (ei.error_type() == NO_CONTEXT)
@@ -412,7 +412,7 @@ void Parser::printErrorMessage(ResultInfo ei) {
   if (ei.error_type() == DIVISION_BY_ZERO)
     std::cout << "division by zero.";
   if (ei.error_type() == ARGS_MISMATCH)
-    std::cout << "arguments number mistmatch for "<< ei.error_info.location << ".";
+    std::cout << "arguments number mistmatch for "<< ei.object_name << ".";
       
   std::cout << std::endl;
 }

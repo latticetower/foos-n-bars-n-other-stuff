@@ -21,6 +21,9 @@ public:
     if (context == NULL) {
       return ResultInfo(0, _variable.line, NO_CONTEXT);
     }
+    if (!context->hasVariable(_variable.token)) {
+      return ResultInfo(0, _variable.line, ErrorType::UNDEF_VARIABLE, _variable.token);
+    }
     int expr_result = 0;
     std::cin >> expr_result;
 

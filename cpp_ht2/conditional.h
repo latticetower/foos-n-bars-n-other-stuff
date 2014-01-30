@@ -24,7 +24,7 @@ public:
           oper.type == LEQ ||
           oper.type == GREATER ||
           oper.type == LESS ) ) {
-      setLastError(ErrorType::SYNTAX);
+      setLastError(SYNTAX);
       setErrorInfo(ErrorInfo(oper.line));
       return;
     }

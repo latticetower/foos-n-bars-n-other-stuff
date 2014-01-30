@@ -37,5 +37,5 @@ public:
   void processString(const std::string& unprocessed_string);
 
   //method opens given file and loads all tokens from it, string by string
-  void loadFromFile(const char* filename);
+  bool loadFromFile(const char* filename);
 };

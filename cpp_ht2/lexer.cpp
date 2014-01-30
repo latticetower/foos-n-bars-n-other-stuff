@@ -92,10 +92,13 @@ void Lexer::processString(std::string const& unprocessed_string) {
 }
 
 
-void Lexer::loadFromFile(const char* filename) {
+bool Lexer::loadFromFile(const char* filename) {
   token_strings_list.clear();
 
   std::ifstream inputStream(filename );
+  if (inputStream.fail())
+    return false;
+  
   std::string buffer = "";
  
   while (!inputStream.eof()) {
@@ -105,6 +108,7 @@ void Lexer::loadFromFile(const char* filename) {
      
   }
   inputStream.close();
+  return true;
 }
 
 void Lexer::appendToken(std::vector<TokenInfo > & tokens_list, const std::string buffer, int line_no) {

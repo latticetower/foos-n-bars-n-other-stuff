@@ -33,8 +33,16 @@ public:
   //all params are being 
   //TODO: to write implementation
   ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
-    print(std::cout);
-    return 0;
+    for (std::vector<std::unique_ptr<IOp> >::iterator iter = _statements.begin(); iter != _statements.end(); ++iter) {
+      ResultInfo ri = (*iter)->Compute(context, _functions);
+      if (ri.error_type() == FUNCTION_RETURN) {
+        return ResultInfo(ri.result, ri.error_info.line, OK);
+      }
+      if (ri.error_type() != OK)
+        return ri;
+    }
+    // print(std::cout);
+    return ResultInfo(0, 0, OK, getName());
   }
 
   virtual void print(std::ostream& os) {
@@ -51,14 +59,20 @@ public:
     
   }
 
+  std::vector<std::string> const & getParamNames() {
+    return _param_names;
+  }
+
 };
 
 class FunctionCallOp: public IOp {
   std::string _name;
+  int _line;
   std::vector<std::unique_ptr<IOp> > _statements;
 public:
   FunctionCallOp(TokenInfo function_name, std::vector<IOp*> statements) { 
     _name = function_name.token;
+    _line = function_name.line;
     //set up pointers ownership - to prevent memory loss:
     _statements.resize(statements.size());
     for (int i = 0; i < (int)statements.size(); i ++) {
@@ -82,8 +96,26 @@ public:
   //all params are being 
   //TODO: to write implementation
   ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
-    print(std::cout);
-    return ResultInfo(0, 0);
+    std::map<std::string, std::unique_ptr<IOp> >::const_iterator pToFunction = _functions.find(_name);
+    if (pToFunction == _functions.end()) {
+      return ResultInfo(0, _line, UNDEF_FUNCTION, _name);
+    }
+    //1. create function context, give it, call compute method
+    Context func_context(context);
+    //TODO: give context to allow use of global variables in function
+    //2.
+    FunctionDefOp* functionDefPointer = dynamic_cast<FunctionDefOp*>(pToFunction->second.get());
+    std::vector<std::string> param_names = functionDefPointer->getParamNames();
+    if (param_names.size() != _statements.size()) {
+      return ResultInfo(0, _line, ARGS_MISMATCH, _name);
+    }
+    for (int i = 0; i < (int)param_names.size(); i++) {
+      ResultInfo ri = _statements[i]->Compute(context, _functions);
+      if (ri.error_type() != OK)
+        return ri;
+      func_context.setVariable(param_names[i], ri.result);
+    }
+    return functionDefPointer->Compute(&func_context, _functions);
   }
 
   virtual void print(std::ostream& os) {
@@ -112,7 +144,8 @@ public:
     if (expr_result.error_type() != OK) {
       return expr_result;
     }
-    std::cout << expr_result.result << std::endl;
+    expr_result.error_info.type = FUNCTION_RETURN;
+    //std::cout << expr_result.result << std::endl;
     return expr_result;
   }
 

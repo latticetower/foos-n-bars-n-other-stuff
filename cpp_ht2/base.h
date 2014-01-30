@@ -58,11 +58,11 @@ public:
           //TODO: should also check here function names. or not)
           int vi = context->getValue(_value.token);
           //TODO: do something with context errors
-          return ResultInfo(vi, _value.line, context->getLastError());
+          return ResultInfo(vi, _value.line, context->getLastError(), _value.token);
         }
       }
     }
-    return ResultInfo(0, _value.line, UNDEF_VARIABLE);
+    return ResultInfo(0, _value.line, UNDEF_VARIABLE, _value.token);
   }
 
   void print(std::ostream& os) {

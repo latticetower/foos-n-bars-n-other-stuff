@@ -37,24 +37,23 @@ enum ErrorType {
 
 struct ErrorInfo{
   ErrorType type;
-  std::string location;
   int line;
-  ErrorInfo(): type(OK), location(""), line(0) {}
-  ErrorInfo(int _line): type(UNKNOWN), location(""), line(_line) {}
-  ErrorInfo(ErrorType et, int _line): type(et), location(""), line(_line) {}
-  ErrorInfo(ErrorType et, int _line, std::string _location):  type(et), location(_location), line(_line) {}
-  
-  void setLocation(std::string const & _location) {
-    location = std::string(_location);
-  }
+
+  ErrorInfo(): type(UNKNOWN), line(0) {}
+  ErrorInfo(int _line): type(UNKNOWN), line(_line) {}
+  ErrorInfo(ErrorType et, int _line): type(et), line(_line) {}
 };
 
 struct ResultInfo{
   ErrorInfo error_info;
+  std::string object_name;
   int result;
   ResultInfo(int line): error_info(UNKNOWN, line), result(0) {}
   ResultInfo(int _result, int _line): error_info(OK, _line), result(_result) { }
   ResultInfo(int _result, int _line, ErrorType info): error_info(info, _line), result(_result) { }
+  ResultInfo(int _result, int _line, ErrorType info, std::string const& name): error_info(info, _line), object_name(name), 
+                                result(_result) { }
+
   ErrorType error_type() {
     return error_info.type;
   }

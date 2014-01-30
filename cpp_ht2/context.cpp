@@ -11,12 +11,14 @@ bool Context::hasVariable(std::string const& variable) {
 }
 
 void Context::setVariable(std::string const& variable, int value) {
+  /*//if uncommented, allows setting global variables from local
   if (_parent_context != NULL) {
     if (_parent_context->hasVariable(variable)) {
       _parent_context->setVariable(variable, value);
       return;
     }
   }
+  */
   this->_variables_hash[variable] = value;
 }
 
