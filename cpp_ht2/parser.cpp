@@ -71,7 +71,7 @@ IOp* Parser::getExprPrior1(Lexer* lexer) {
   else {
     op1 = getExprPrior2(lexer);
   }
-  if (!op1->valid())
+  if (op1->getLastError() != OK)//TODO: add condition for return statement too
     return op1;
   TokenInfo current_operation = lexer->peekNextToken();
   while (current_operation.type  == PLUS || current_operation.type == MINUS) {
@@ -94,7 +94,7 @@ IOp* Parser::getExprPrior1(Lexer* lexer) {
 IOp* Parser::getExprPrior2(Lexer* lexer) {
   // 1. get first operand
   IOp* op1 = getExprPrior3(lexer);
-  if (!op1->valid()) {
+  if (op1->getLastError() != OK) {//TODO: add some check for return value too
     return op1;
   }
   TokenInfo current_operation = lexer->peekNextToken();
@@ -312,6 +312,43 @@ std::vector<IOp* > Parser::getExpressionsSequence(Lexer* lexer) {
 
 void Parser::ComputeAll(Context* context) {
   for (std::vector<std::unique_ptr<IOp> >::iterator iter = _expressions.begin(); iter != _expressions.end(); ++iter) {
-    (*iter)->Compute(context, _functions);
+    ResultInfo computation_result = (*iter)->Compute(context, _functions);
+    if (computation_result.error_type() != OK) {
+      printErrorMessage(computation_result);
+      return;
+    }
   }
+}
+
+void Parser::printErrorMessage(ResultInfo ei) {
+  if (ei.error_type() == OK)
+    return;
+  std::cout << "line " << ei.error_info.line << ": ";
+  switch (ei.error_type()) {
+    case ErrorType::UNKNOWN:
+      std::cout << "unknown error occured.";
+      break;
+    case ErrorType::UNDEF_VARIABLE:
+      std::cout << "undefined variable " << ei.error_info.location << ".";
+      break;
+    case ErrorType::UNDEF_FUNCTION:
+      std::cout << "undefined function " << ei.error_info.location << ".";
+      break;
+    case ErrorType::SYNTAX:
+      std::cout << "syntax error.";
+      break;
+    case ErrorType::NO_CONTEXT:
+      std::cout << "context not found...";
+      break;
+    case ErrorType::FUNCTION_RETURN:
+      std::cout << "function return statement occured.";
+      break;
+    case ErrorType::DIVISION_BY_ZERO:
+      std::cout << "division by zero.";
+      break;
+    case ErrorType::ARGS_MISMATCH:
+      std::cout << "arguments number mistmatch for "<< ei.error_info.location << ".";
+      break;
+  }
+  std::cout << std::endl;
 }

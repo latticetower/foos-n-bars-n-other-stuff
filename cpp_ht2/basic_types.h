@@ -29,6 +29,8 @@ enum ErrorType {
   UNDEF_VARIABLE,
   UNDEF_FUNCTION,
   ARGS_MISMATCH, 
+  FUNCTION_RETURN, //for handling return statements in functions
+  NO_CONTEXT, // for handling cases when in Compute method context parameter is null
   UNKNOWN // in case if aliens stole my baby
 };
 
@@ -38,6 +40,7 @@ struct ErrorInfo{
   std::string location;
   int line;
   ErrorInfo(): type(OK), location(""), line(0) {}
+  ErrorInfo(int _line): type(UNKNOWN), location(""), line(_line) {}
   ErrorInfo(ErrorType et, int _line): type(et), location(""), line(_line) {}
   ErrorInfo(ErrorType et, int _line, std::string _location):  type(et), location(_location), line(_line) {}
   
@@ -46,4 +49,106 @@ struct ErrorInfo{
   }
 };
 
-typedef std::pair<ErrorType, int> VariableInfo;
+struct ResultInfo{
+  ErrorInfo error_info;
+  int result;
+  ResultInfo(int line): error_info(UNKNOWN, line), result(0) {}
+  ResultInfo(int _result, int _line): error_info(OK, _line), result(_result) { }
+  ResultInfo(int _result, int _line, ErrorType info): error_info(info, _line), result(_result) { }
+  ErrorType error_type() {
+    return error_info.type;
+  }
+  ResultInfo operator == (ResultInfo res2) {
+    if (error_info.type != OK) {
+      return *this;
+    }
+    if (res2.error_type() != OK) {
+      return res2;
+    }
+    return ResultInfo(result == res2.result, error_info.line);
+  }
+  ResultInfo operator < (ResultInfo res2) {
+    if (error_info.type != OK) {
+      return *this;
+    }
+    if (res2.error_type() != OK) {
+      return res2;
+    }
+    return ResultInfo(result < res2.result, error_info.line);
+  }
+
+  ResultInfo operator > (ResultInfo res2) {
+    return res2 < *this;
+  }
+
+  ResultInfo operator != (ResultInfo res2) {
+    if (error_info.type != OK) {
+      return *this;
+    }
+    if (res2.error_type() != OK) {
+      return res2;
+    }
+    return ResultInfo(result != res2.result, error_info.line);
+  }
+
+  ResultInfo operator >= (ResultInfo res2) {
+    if (error_info.type != OK) {
+      return *this;
+    }
+    if (res2.error_type() != OK) {
+      return res2;
+    }
+    return ResultInfo(result >= res2.result, error_info.line);
+  }
+  ResultInfo operator <= (ResultInfo res2) {
+    if (error_info.type != OK) {
+      return *this;
+    }
+    if (res2.error_type() != OK) {
+      return res2;
+    }
+    return ResultInfo(result <= res2.result, error_info.line);
+  }
+
+  ResultInfo operator + (ResultInfo res2) {
+    if (error_info.type != OK) {
+      return *this;
+    }
+    if (res2.error_type() != OK) {
+      return res2;
+    }
+    return ResultInfo(result + res2.result, error_info.line);
+  }
+  ResultInfo operator - (ResultInfo res2) {
+    if (error_info.type != OK) {
+      return *this;
+    }
+    if (res2.error_type() != OK) {
+      return res2;
+    }
+    return ResultInfo(result - res2.result, error_info.line);
+  }
+  ResultInfo operator * (ResultInfo res2) {
+    if (error_info.type != OK) {
+      return *this;
+    }
+    if (res2.error_type() != OK) {
+      return res2;
+    }
+    return ResultInfo(result * res2.result, error_info.line);
+  }
+
+  ResultInfo operator / (ResultInfo res2) {
+    if (error_info.type != OK) {
+      return *this;
+    }
+    if (res2.error_type() != OK) {
+      return res2;
+    }
+    if (res2.result == 0) {
+      return ResultInfo(0, res2.error_info.line, DIVISION_BY_ZERO);
+    }
+    return ResultInfo(result / res2.result, error_info.line);
+  }
+};
+//typedef std::pair<ErrorInfo, int> ResultInfo;

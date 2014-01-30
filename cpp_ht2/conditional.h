@@ -10,12 +10,35 @@ class ConditionOp: public IOp {
   std::unique_ptr<IOp> _op1, _op2;
   TokenInfo _oper;
 public:
-  ConditionOp(IOp* op1, IOp* op2, TokenInfo oper): _op1(op1), _op2(op2), _oper(oper) { }
+  ConditionOp(IOp* op1, IOp* op2, TokenInfo oper): _op1(op1), _op2(op2), _oper(oper) {
+    setLastError(OK); 
+    //check for errors:
+    if (op1->getLastError() != OK) {
+      setLastError(op1->getLastError());
+      setErrorInfo(op1->getErrorInfo());
+      return;
+    }
+    if (!(oper.type == EQ || 
+          oper.type == NEQ ||
+          oper.type == GEQ ||
+          oper.type == LEQ ||
+          oper.type == GREATER ||
+          oper.type == LESS ) ) {
+      setLastError(ErrorType::SYNTAX);
+      setErrorInfo(ErrorInfo(oper.line));
+      return;
+    }
+    if (op2->getLastError() != OK) {
+      setLastError(op2->getLastError());
+      setErrorInfo(op2->getErrorInfo());
+      return;
+    }
+  }
 
-  int Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
-    int op1_value = _op1->Compute(context, _functions);
-    int op2_value = _op2->Compute(context, _functions);
-    setLastError(OK);
+  ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+    ResultInfo op1_value = _op1->Compute(context, _functions);
+    ResultInfo op2_value = _op2->Compute(context, _functions);
+    
     switch (_oper.type) {
     case EQ:
       return op1_value == op2_value;
@@ -36,23 +59,18 @@ public:
       return op1_value <= op2_value;
       break;
     default:
-      setLastError(UNKNOWN);
-      return -1; //TODO: should return some error instead
+      return ResultInfo(0); //TODO: should return some error instead
     }
-    setLastError(UNKNOWN);
-    return -1;
+    return ResultInfo(0);
   }
 
-  virtual void print() {
-    std::cout << "ConditionOp:" << std::endl;
-    _op1->print();
-    std::cout << " condition op2:"<< std::endl;
-    _op2->print();
+  virtual void print(std::ostream& os) {
+    os << "ConditionOp:" << std::endl;
+    _op1->print(os);
+    os << " condition op2:"<< std::endl;
+    _op2->print(os);
   }
 
-  bool valid() {
-    return  _op1->valid() && _op2->valid();
-  }
 };
 
 class IfOp: public IOp {
@@ -61,41 +79,47 @@ class IfOp: public IOp {
 public:
   IfOp(IOp* cond, std::vector<IOp* > statements): _condition(cond) { 
     setLastError(OK);
+    //set up pointers ownership - to prevent memory loss:
     _statements.resize(statements.size());
     for (int i = 0; i < statements.size(); i ++) {
       _statements[i] = std::unique_ptr<IOp>(statements[i]);
     }
+    //check for errors:
+    if (cond->getLastError() != OK) {
+      setLastError(cond->getLastError());
+      setErrorInfo(cond->getErrorInfo());
+      return;
+    }
+    for (int i = 0; i < statements.size(); i ++) {
+      if (statements[i]->getLastError() != OK) {
+        setLastError(statements[i]->getLastError());
+        setErrorInfo(statements[i]->getErrorInfo());
+        break;
+      }
+    }
   }
   
-  int Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+  ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
     //TODO: add error handling
-    int condition_result = _condition->Compute(context, _functions);
-    if (condition_result) {
+    ResultInfo condition_result = _condition->Compute(context, _functions);
+    if (condition_result.result) {
       for (std::vector<std::unique_ptr<IOp> >::iterator iter = _statements.begin(); iter != _statements.end(); ++iter) {
-        (*iter)->Compute(context, _functions);
-        if ((*iter)->getLastError() != OK) {
-          setLastError((*iter)->getLastError());
-          return 0;
+        ResultInfo statement_result = (*iter)->Compute(context, _functions);
+        if (statement_result.error_type() != OK) {
+          return statement_result;
         }
       }
     }
-    setLastError(OK);
-    return 0;
+    return ResultInfo(0, condition_result.error_info.line);
   }
 
-  virtual void print() {
-    std::cout << "If:" << std::endl;
-    _condition->print();
-    std::cout << "if lines: "<< std::endl;
+  virtual void print(std::ostream& os) {
+    os << "If:" << std::endl;
+    _condition->print(os);
+    os << "if lines: "<< std::endl;
     for (std::vector<std::unique_ptr<IOp> >::iterator iter = _statements.begin(); iter != _statements.end(); ++iter) {
-        (*iter)->print();
-      }
-    
-  }
-
-  bool valid() {
-    return  _condition->valid();
-    //TODO: should validate contents too
+        (*iter)->print(os);
+      } 
   }
 };
 
@@ -105,38 +129,44 @@ class WhileOp: public IOp {
 public:
   WhileOp(IOp* cond, std::vector<IOp* > statements): _condition(cond) { 
     setLastError(OK);
+    //set up pointers ownership - to prevent memory loss:
     _statements.resize(statements.size());
     for (int i = 0; i < statements.size(); i ++) {
       _statements[i] = std::unique_ptr<IOp>(statements[i]);
     }
+    //check for errors:
+    if (cond->getLastError() != OK) {
+      setLastError(cond->getLastError());
+      setErrorInfo(cond->getErrorInfo());
+      return;
+    }
+    for (int i = 0; i < statements.size(); i ++) {
+      if (statements[i]->getLastError() != OK) {
+        setLastError(statements[i]->getLastError());
+        setErrorInfo(statements[i]->getErrorInfo());
+        break;
+      }
+    }
   }
   
-  int Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
-    while (_condition->Compute(context, _functions)) {
+  ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+    while (_condition->Compute(context, _functions).result) {
       for (std::vector<std::unique_ptr<IOp> >::iterator iter = _statements.begin(); iter != _statements.end(); ++ iter) {
-        (*iter)->Compute(context, _functions);
-        if ((*iter)->getLastError() != OK) {
-          setLastError((*iter)->getLastError());
-          return 0;
+        ResultInfo result = (*iter)->Compute(context, _functions);
+        if (result.error_type() != OK) {
+          return result;
         }
       }
     }
-    setLastError(OK);
-    return 0;
+    return ResultInfo(0, 0);//TODO: check this aaargh i hate myself
   }
 
-  virtual void print() {
-    std::cout << "while:" << std::endl;
-    _condition->print();
-    std::cout << "while statements: "<<std::endl;
+  virtual void print(std::ostream& os) {
+    os << "while:" << std::endl;
+    _condition->print(os);
+    os << "while statements: "<<std::endl;
     for (std::vector<std::unique_ptr<IOp> >::iterator iter = _statements.begin(); iter != _statements.end(); ++ iter) {
-        (*iter)->print();
+        (*iter)->print(os);
     }
-    
-  }
-
-  bool valid() {
-    return  _condition->valid();
-    //TODO: should validate contents too
   }
 };

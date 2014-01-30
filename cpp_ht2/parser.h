@@ -26,7 +26,7 @@ public:
 
   IOp* getNextExpression(Lexer* lexer);
 
-  void Parse() {
+  bool Parse() {
    //Operand o1 = first
     std::vector<IOp*> exp = getExpressionsSequence(lexer);
     _expressions.resize(exp.size());
@@ -37,6 +37,18 @@ public:
     //  std::cout << "------------" << std::endl << "expr" << std::endl;
     //  (*iter)->print();
     //}
+    for (int i = 0; i < exp.size(); i++) {
+      if (exp[i]->getLastError() != OK) {
+        if (exp[i]->getLastError() == SYNTAX) {
+          std::cout << "line " << exp[i]->getErrorInfo().line << ": syntax error." << std::endl;
+        }
+        else {
+          std::cout << "line " << exp[i]->getErrorInfo().line << ": unknown error occured" << std::endl;
+        }
+        return false;
+      }
+    }
+    return true;
   }
   
   void ComputeAll(Context* c);
@@ -61,5 +73,5 @@ private:
   IOp* getWhile(Lexer*lexer);
   IOp* getFunctionDef(Lexer*lexer);
   IOp* getFunctionCall(Lexer*lexer);
-
+  void printErrorMessage(ResultInfo ei);
 };

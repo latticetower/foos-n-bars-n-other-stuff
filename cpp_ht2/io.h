@@ -9,53 +9,53 @@
 class ReadOp:public IOp {
   TokenInfo _variable;
 public:
-  ReadOp(TokenInfo var): _variable(var) { setLastError(OK); }
-
-  int Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+  ReadOp(TokenInfo var): _variable(var) { 
     setLastError(OK);
+    if (var.type != VAR) {
+      setLastError(SYNTAX);
+      setErrorInfo(var.line);
+    }
+  }
+
+  ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+    if (context == NULL) {
+      return ResultInfo(0, _variable.line, NO_CONTEXT);
+    }
     int expr_result = 0;
     std::cin >> expr_result;
-    if (context == NULL) {
-      setLastError(UNKNOWN);
-      return 0;
-    }
+
     context->setVariable(_variable.token, expr_result);
     // TODO: should create new variable in current context
-    return expr_result;
+    return ResultInfo(expr_result, _variable.line);
   }
 
-  void print() {
-    std::cout << "ReadOp:" << _variable.token << std::endl; 
+  void print(std::ostream& os) {
+    os << "ReadOp:" << _variable.token << std::endl; 
   }
-  bool valid() {
-    return _variable.type == VAR;
-  }
+
 };
 
 class PrintOp: public IOp {
   std::unique_ptr<IOp> _value;
 public:
   PrintOp() {}
-  PrintOp(IOp* op): _value(op) { setLastError(OK); }
+  PrintOp(IOp* op): _value(op) { 
+    setLastError(op->getLastError()); 
+    setErrorInfo(op->getErrorInfo());
+  }
   
-  int Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
-    int expr_result = _value->Compute(context, _functions);
-    if (_value->getLastError() != OK) {
-      setLastError(_value->getLastError());
-      return 0;
+  ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+    ResultInfo expr_result = _value->Compute(context, _functions);
+    if (expr_result.error_type() != OK) {
+      return expr_result;
     }
-    std::cout << expr_result << std::endl;
-    setLastError(OK);
+    std::cout << expr_result.result << std::endl;
     return expr_result;
   }
 
-  void print() {
-    std::cout << "PrintOp:" << std::endl;
-    _value->print();    
-  }
-
-  bool valid() {
-    return  _value->valid();
+  void print(std::ostream& os) {
+    os << "PrintOp:" << std::endl;
+    _value->print(os);    
   }
 };
 

@@ -17,7 +17,8 @@ int main(int argc, char**argv) {
   lexer.loadFromFile(argv[1]);
   //lexer.printTokensToConsole(std::cout);
   Parser p(&lexer);
-  p.Parse();
+  if (!p.Parse())
+    return 0;
   p.ComputeAll(&globalContext);
 
   return 0;
