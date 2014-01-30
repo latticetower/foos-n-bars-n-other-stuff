@@ -164,7 +164,6 @@ public:
     }
     
     context->setVariable(_variable.token, var_value.result);
-    //TODO: add variable context
     return var_value;
   }
 

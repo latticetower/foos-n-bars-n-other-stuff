@@ -21,7 +21,7 @@ int main(int argc, char**argv) {
     std::cout << "Please, provide _valid_ file name as a parameter" << std::endl;
     return 0;
   }
-  //lexer.printTokensToConsole(std::cout);
+  
   Parser p(&lexer);
   if (!p.Parse())
     return 0;

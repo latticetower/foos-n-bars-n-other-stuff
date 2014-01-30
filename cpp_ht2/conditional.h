@@ -51,10 +51,8 @@ public:
       return op1_value < op2_value;
     if (_oper.type == LEQ)
       return op1_value <= op2_value;
-    //default:
-    //  return ResultInfo(0); //TODO: should return some error instead
-    
-    return ResultInfo(0);
+
+    return ResultInfo(0, _oper.line, ErrorType::UNKNOWN);
   }
 
   virtual void print(std::ostream& os) {
@@ -93,7 +91,6 @@ public:
   }
   
   ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
-    //TODO: add error handling
     ResultInfo condition_result = _condition->Compute(context, _functions);
     if (condition_result.result) {
       for (std::vector<std::unique_ptr<IOp> >::iterator iter = _statements.begin(); iter != _statements.end(); ++iter) {
@@ -151,7 +148,7 @@ public:
         }
       }
     }
-    return ResultInfo(0, 0);//TODO: check this aaargh i hate myself
+    return ResultInfo(0, 0);
   }
 
   virtual void print(std::ostream& os) {

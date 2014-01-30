@@ -100,10 +100,9 @@ public:
     if (pToFunction == _functions.end()) {
       return ResultInfo(0, _line, UNDEF_FUNCTION, _name);
     }
-    //1. create function context, give it, call compute method
-    Context func_context(context);
-    //TODO: give context to allow use of global variables in function
-    //2.
+    
+    Context func_context(context); // give context to allow use of global variables in function
+    
     FunctionDefOp* functionDefPointer = dynamic_cast<FunctionDefOp*>(pToFunction->second.get());
     std::vector<std::string> param_names = functionDefPointer->getParamNames();
     if (param_names.size() != _statements.size()) {
@@ -145,7 +144,7 @@ public:
       return expr_result;
     }
     expr_result.error_info.type = FUNCTION_RETURN;
-    //std::cout << expr_result.result << std::endl;
+   
     return expr_result;
   }
 

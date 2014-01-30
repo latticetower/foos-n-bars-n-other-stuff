@@ -6,7 +6,7 @@
 
 
 class InvalidOp: public IOp {
-  // std::string _info;
+
 public: 
   InvalidOp() { 
     setLastError(UNKNOWN); 

@@ -28,7 +28,6 @@ public:
     std::cin >> expr_result;
 
     context->setVariable(_variable.token, expr_result);
-    // TODO: should create new variable in current context
     return ResultInfo(expr_result, _variable.line);
   }
 

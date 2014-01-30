@@ -13,7 +13,6 @@ enum TokenType {
   ENDOFFILE
 };
 
-//typedef std::pair<TokenType, std::string> TokenInfo;
 struct TokenInfo {
   TokenType    type;
   std::string token;
@@ -150,4 +149,3 @@ struct ResultInfo{
     return ResultInfo(result / res2.result, error_info.line);
   }
 };
-//typedef std::pair<ErrorInfo, int> ResultInfo;

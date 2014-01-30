@@ -320,12 +320,13 @@ IOp* Parser::getFunctionCall(Lexer* lexer, TokenInfo var) {
     }
 
     next = lexer->getNextToken();// RBRACKET
+    // check for RBRACKET and return syntax error:
     if (next.type != RBRACKET) {
       for (int i = 0; i < (int)function_parameters.size(); i++)
         delete function_parameters[i];
       return new InvalidOp(SYNTAX, next.line);
     }
-    //TODO: check for RBRACKET and return syntax error
+    
     return new FunctionCallOp(var, function_parameters);
   }
   return new InvalidOp(SYNTAX, next.line);
@@ -372,9 +373,6 @@ std::vector<IOp* > Parser::getExpressionsSequence(Lexer* lexer) {
     IOp* op = getNextExpression(lexer);
     expr.push_back(op);
     if (op->getLastError() != OK) {
-      //clear vector
-      //add only member - current error
-      op->getErrorInfo();
       break;
     }
     ti = lexer->peekNextToken();

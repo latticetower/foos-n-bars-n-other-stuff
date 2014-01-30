@@ -4,7 +4,6 @@
 #include "basic_types.h"
 #include "lexer.h"
 #include "context.h"
-// #include "error_handling.h"
 
 class IOp{
   ErrorType _last_error;
@@ -55,9 +54,7 @@ public:
     else {
       if (_value.type == VAR) {
         if (context != NULL) {
-          //TODO: should also check here function names. or not)
           int vi = context->getValue(_value.token);
-          //TODO: do something with context errors
           return ResultInfo(vi, _value.line, context->getLastError(), _value.token);
         }
       }

@@ -18,25 +18,19 @@ class Parser{
   std::map<std::string, std::unique_ptr<IOp> > _functions;
   // TokenInfo lastOperand;
 public:
-  Parser(Lexer * l): lexer(l) {
-   // lastOperand = TokenInfo(END, "", 0); //TODO: check if unused
-  }
+  Parser(Lexer * l): lexer(l) { }
   
   std::vector<IOp*> getExpressionsSequence(Lexer* lexer);
 
   IOp* getNextExpression(Lexer* lexer);
 
   bool Parse() {
-   //Operand o1 = first
     std::vector<IOp*> exp = getExpressionsSequence(lexer);
     _expressions.resize(exp.size());
     for (int i = 0; i < (int)exp.size(); i++) {
       _expressions[i] = std::unique_ptr<IOp>(exp[i]);
     }
-    //for (std::vector<IOp*>::iterator iter = _expressions.begin(); iter != _expressions.end(); ++iter) {
-    //  std::cout << "------------" << std::endl << "expr" << std::endl;
-    //  (*iter)->print();
-    //}
+    
     for (int i = 0; i < (int)exp.size(); i++) {
       if (exp[i]->getLastError() != OK) {
         if (exp[i]->getLastError() == SYNTAX) {
