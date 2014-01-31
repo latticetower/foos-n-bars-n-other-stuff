@@ -10,6 +10,8 @@ class FunctionDefOp: public IOp {
   std::vector<std::string> _param_names;
   std::vector<std::unique_ptr<IOp> > _statements;
 public:
+  ~FunctionDefOp() { }
+
   FunctionDefOp(std::string function_name, std::vector<std::string> function_parameter_names, 
                 std::vector<IOp*> statements) { 
 
@@ -70,6 +72,8 @@ class FunctionCallOp: public IOp {
   int _line;
   std::vector<std::unique_ptr<IOp> > _statements;
 public:
+  ~FunctionCallOp() { }
+
   FunctionCallOp(TokenInfo function_name, std::vector<IOp*> statements) { 
     _name = function_name.token;
     _line = function_name.line;
@@ -132,6 +136,8 @@ public:
 class ReturnOp: public IOp {
   std::unique_ptr<IOp> _value;
 public:
+  ~ReturnOp() { }
+
   ReturnOp() {}
   ReturnOp(IOp* op): _value(op) { 
     setLastError(op->getLastError()); 

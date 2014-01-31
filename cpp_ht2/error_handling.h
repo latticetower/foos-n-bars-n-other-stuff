@@ -8,6 +8,7 @@
 class InvalidOp: public IOp {
 
 public: 
+  ~InvalidOp() { }
   InvalidOp() { 
     setLastError(UNKNOWN); 
   }

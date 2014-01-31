@@ -35,6 +35,7 @@ public:
   virtual void setErrorInfo(ErrorInfo ei) {
     _info.line = ei.line;
   }
+  virtual ~IOp() { };
 
 };
 
@@ -65,4 +66,5 @@ public:
   void print(std::ostream& os) {
     os << "BasicOp: " << _value.token << std::endl;
   }
+  ~BasicOp() {  }
 };

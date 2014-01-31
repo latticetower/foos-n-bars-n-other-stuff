@@ -9,6 +9,7 @@
 class ReadOp:public IOp {
   TokenInfo _variable;
 public:
+  ~ReadOp() { }
   ReadOp(TokenInfo var): _variable(var) { 
     setLastError(OK);
     if (var.type != VAR) {
@@ -40,6 +41,7 @@ public:
 class PrintOp: public IOp {
   std::unique_ptr<IOp> _value;
 public:
+  ~PrintOp() { }
   PrintOp() {}
   PrintOp(IOp* op): _value(op) { 
     setLastError(op->getLastError()); 

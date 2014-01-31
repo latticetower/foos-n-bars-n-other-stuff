@@ -10,6 +10,8 @@ class ConditionOp: public IOp {
   std::unique_ptr<IOp> _op1, _op2;
   TokenInfo _oper;
 public:
+  ~ConditionOp() { }
+
   ConditionOp(IOp* op1, IOp* op2, TokenInfo oper): _op1(op1), _op2(op2), _oper(oper) {
     setLastError(OK); 
     //check for errors:
@@ -68,6 +70,8 @@ class IfOp: public IOp {
   std::unique_ptr<IOp> _condition;
   std::vector<std::unique_ptr<IOp> > _statements;
 public:
+  ~IfOp() { }
+
   IfOp(IOp* cond, std::vector<IOp* > statements): _condition(cond) { 
     setLastError(OK);
     //set up pointers ownership - to prevent memory loss:
@@ -117,6 +121,7 @@ class WhileOp: public IOp {
   std::unique_ptr<IOp> _condition;
   std::vector<std::unique_ptr<IOp> > _statements;
 public:
+  ~WhileOp() { }
   WhileOp(IOp* cond, std::vector<IOp* > statements): _condition(cond) { 
     setLastError(OK);
     //set up pointers ownership - to prevent memory loss:

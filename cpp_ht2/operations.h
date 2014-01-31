@@ -11,6 +11,7 @@
 class PlusOp: public IOp {
   std::unique_ptr<IOp> _op1, _op2;
 public:
+  ~PlusOp() { }
   PlusOp(IOp* op1, IOp* op2): _op1(op1), _op2(op2) {  
     setLastError(OK);
     if (op1->getLastError() != OK) {
@@ -43,6 +44,7 @@ public:
 class MinusOp: public IOp {
   std::unique_ptr<IOp> _op1, _op2;
 public:
+  ~MinusOp() { }
   MinusOp(IOp* op1, IOp* op2): _op1(op1), _op2(op2) {  
     setLastError(OK);
     if (op1->getLastError() != OK) {
@@ -75,6 +77,7 @@ public:
 class MultOp: public IOp {
   std::unique_ptr<IOp> _op1, _op2;
 public:
+  ~MultOp() { }
   MultOp(IOp* op1, IOp* op2):_op1(op1), _op2(op2) {  
     setLastError(OK);
     if (op1->getLastError() != OK) {
@@ -107,6 +110,7 @@ public:
 class DivideOp: public IOp {
   std::unique_ptr<IOp> _op1, _op2;
 public:
+  ~DivideOp() { }
   DivideOp(IOp* op1, IOp* op2): _op1(op1), _op2(op2) {  
     setLastError(OK);
     if (op1->getLastError() != OK) {
@@ -140,6 +144,7 @@ class AssignOp: public IOp {
   TokenInfo _variable;
   std::unique_ptr<IOp> _value;
 public:
+  
   AssignOp(TokenInfo var, IOp* value = NULL): _variable(var), _value(value) {  
     setLastError(OK);
     if (var.type != VAR) {
@@ -173,5 +178,6 @@ public:
     os << " Assign op value: " << std::endl;
     _value->print(os);
   }
+  ~AssignOp() { }
 };
 
