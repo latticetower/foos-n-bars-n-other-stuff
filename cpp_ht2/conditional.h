@@ -54,7 +54,7 @@ public:
     if (_oper.type == LEQ)
       return op1_value <= op2_value;
 
-    return ResultInfo(0, _oper.line, ErrorType::UNKNOWN);
+    return ResultInfo(0, _oper.line, UNKNOWN);
   }
 
   virtual void print(std::ostream& os) {

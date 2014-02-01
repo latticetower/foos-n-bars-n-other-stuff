@@ -47,6 +47,7 @@ struct ResultInfo{
   ErrorInfo error_info;
   std::string object_name;
   int result;
+  ResultInfo(): error_info(UNKNOWN, 0), result(0) {}
   ResultInfo(int line): error_info(UNKNOWN, line), result(0) {}
   ResultInfo(int _result, int _line): error_info(OK, _line), result(_result) { }
   ResultInfo(int _result, int _line, ErrorType info): error_info(info, _line), result(_result) { }
