@@ -4,14 +4,14 @@ bool Context::hasVariable(std::string const& variable) {
   if (_variables_hash.find(variable) != _variables_hash.end()) 
     return true;
   if (_parent_context != NULL) {
-    if (_parent_context->hasVariable(variable))
-      return true;
+    return (_parent_context->hasVariable(variable));
   }
   return false;
 }
 
 void Context::setVariable(std::string const& variable, int value) {
-  /*//if uncommented, allows setting global variables from local
+  //if uncommented, allows setting global variables from local
+  /*
   if (_parent_context != NULL) {
     if (_parent_context->hasVariable(variable)) {
       _parent_context->setVariable(variable, value);
@@ -19,6 +19,7 @@ void Context::setVariable(std::string const& variable, int value) {
     }
   }
   */
+  
   this->_variables_hash[variable] = value;
 }
 
@@ -29,9 +30,11 @@ int Context::getValue(std::string const& variable) {
     setLastError(OK);
     return (*iter_value).second;
   }
-  if (_parent_context != NULL) {
+
+  if (_parent_context != NULL) { 
+    int result =  _parent_context->getValue(variable);
     setLastError(_parent_context->getLastError());
-    return _parent_context->getValue(variable);
+    return result;
   }
   setLastError(UNDEF_VARIABLE);
   return 0;

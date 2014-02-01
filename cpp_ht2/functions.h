@@ -14,6 +14,7 @@ class FunctionDefOp: public IOp {
   std::vector<std::unique_ptr<IOp> > _statements;
 
   std::map<std::vector<int>, int> _call_cache;
+  std::set<std::string> _actual_var_names;
 public:
   ~FunctionDefOp() { }
 
@@ -27,6 +28,7 @@ public:
     for (int i = 0; i < (int)statements.size(); i ++) {
       _statements[i] = std::unique_ptr<IOp>(statements[i]);
     }
+
     //check for errors:
     for (int i = 0; i < (int)statements.size(); i ++) {
       if (statements[i]->getLastError() != OK) {
@@ -35,6 +37,11 @@ public:
         return;
       }
     }
+    //if everything is ok, parse and save to set actual variables
+    for (int i = 0; i < (int)statements.size(); i ++) {
+      _statements[i]->kickUpVars(&_actual_var_names);
+    }
+
   }
 
   bool hasCachedValue(std::vector<int> values) {
@@ -60,13 +67,10 @@ public:
   //TODO: to write implementation
   ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
     // first check up if there are some values computed previously
-    std::vector<int> values;
-    for (std::vector<std::string>::iterator iter = _param_names.begin(); iter != _param_names.end(); ++ iter) {
-      values.push_back(context->getValue(*iter));
-    }
+    std::vector<int> actual_var_values = this->getActualVarValues(context);
     
-    if (hasCachedValue(values)) {
-      return getCachedValue(values);
+    if (hasCachedValue(actual_var_values)) {
+      return getCachedValue(actual_var_values);
     }
 
     // if not, try to compute:
@@ -74,17 +78,17 @@ public:
       ResultInfo ri = (*iter)->Compute(context, _functions);
       if (ri.error_type() == FUNCTION_RETURN) {
         ResultInfo ri2(ri.result, ri.error_info.line, OK);
-        setCachedValue(values, ri2);
+        setCachedValue(actual_var_values, ri2);
         return ri2;
       }
       if (ri.error_type() != OK) {
-        setCachedValue(values, ri);
+        setCachedValue(actual_var_values, ri);
         return ri;
       }
     }
     // print(std::cout);
     ResultInfo ri(0, 0, OK, getName());
-    setCachedValue(values, ri);
+    setCachedValue(actual_var_values, ri);
     return ri;
   }
 
@@ -102,8 +106,31 @@ public:
     
   }
 
+  std::set<std::string> const & getActualVarNames() {
+    return _actual_var_names;
+  }
+
+  std::vector<int> getActualVarValues(IContext* context) {
+    std::vector<int> actual_values;
+    if (context == NULL)
+      return actual_values;
+
+    for (std::set<std::string>::iterator iter = _actual_var_names.begin(); iter!= _actual_var_names.end(); ++iter) {
+      if (context->hasVariable(*iter))
+        actual_values.push_back(context->getValue(*iter));
+      else 
+        actual_values.push_back(0);
+    }
+    return actual_values;
+  }
+
   std::vector<std::string> const & getParamNames() {
     return _param_names;
+  }
+  void kickUpVars(std::set<std::string>* target) {
+    for (std::vector<std::unique_ptr<IOp> >::iterator iter = _statements.begin(); iter != _statements.end(); ++ iter) {
+      (*iter)->kickUpVars(target);
+    }
   }
 
 };
@@ -159,8 +186,11 @@ public:
         return ri;
       values.push_back(ri.result);
     }
-    if (functionDefPointer->hasCachedValue(values)) {
-      return functionDefPointer->getCachedValue(values);
+
+    std::vector<int> actual_values = functionDefPointer->getActualVarValues(context);
+
+    if (functionDefPointer->hasCachedValue(actual_values)) {
+      return functionDefPointer->getCachedValue(actual_values);
     }
     
     Context func_context(context); // give context to allow use of global variables in function
@@ -169,6 +199,12 @@ public:
       func_context.setVariable(param_names[i], values[i]);
     }
     return functionDefPointer->Compute(&func_context, _functions);
+  }
+
+  void kickUpVars(std::set<std::string>* target) {
+    for (std::vector<std::unique_ptr<IOp> >::iterator iter = _statements.begin(); iter != _statements.end(); ++ iter) {
+      (*iter)->kickUpVars(target);
+    } 
   }
 
   virtual void print(std::ostream& os) {
@@ -202,6 +238,10 @@ public:
     expr_result.error_info.type = FUNCTION_RETURN;
    
     return expr_result;
+  }
+
+  void kickUpVars(std::set<std::string>* target) {
+    _value->kickUpVars(target);
   }
 
   void print(std::ostream& os) {

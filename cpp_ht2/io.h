@@ -36,6 +36,10 @@ public:
     os << "ReadOp:" << _variable.token << std::endl; 
   }
 
+  void kickUpVars(std::set<std::string>* target) {
+    if (_variable.type == VAR)
+      target->insert(_variable.token);
+  }
 };
 
 class PrintOp: public IOp {
@@ -60,6 +64,10 @@ public:
   void print(std::ostream& os) {
     os << "PrintOp:" << std::endl;
     _value->print(os);    
+  }
+
+  void kickUpVars(std::set<std::string>* target) {
+    _value->kickUpVars(target);
   }
 };
 

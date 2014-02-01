@@ -39,6 +39,11 @@ public:
     os << " PlusOp op2: " << std::endl;
     _op2->print(os);
   }
+
+  void kickUpVars(std::set<std::string>* target) {
+    _op1->kickUpVars(target);
+    _op2->kickUpVars(target);
+  }
 };
 
 class MinusOp: public IOp {
@@ -72,6 +77,10 @@ public:
     os << " MinusOp op2: " << std::endl;
     _op2->print(os);
   }
+  void kickUpVars(std::set<std::string>* target) {
+    _op1->kickUpVars(target);
+    _op2->kickUpVars(target);
+  }
 };
 
 class MultOp: public IOp {
@@ -104,6 +113,11 @@ public:
     _op1->print(os);
     os << " MultOp op2: "<< std::endl ;
     _op2->print(os);
+  } 
+  
+  void kickUpVars(std::set<std::string>* target) {
+    _op1->kickUpVars(target);
+    _op2->kickUpVars(target);
   }
 };
 
@@ -136,6 +150,11 @@ public:
     _op1->print(os);
     os << " DivideOp op2: " << std::endl;
     _op2->print(os);
+  }
+
+  void kickUpVars(std::set<std::string>* target) {
+    _op1->kickUpVars(target);
+    _op2->kickUpVars(target);
   }
 };
 
@@ -172,11 +191,17 @@ public:
     return var_value;
   }
 
-  virtual void print(std::ostream& os) {
+  void print(std::ostream& os) {
     os << "Assign: " << std::endl;
     os << " var name: " << _variable.token << std::endl;
     os << " Assign op value: " << std::endl;
     _value->print(os);
+  }
+
+  void kickUpVars(std::set<std::string>* target) {
+    if (_variable.type == VAR)
+      target->insert(_variable.token);
+    _value->kickUpVars(target);
   }
   ~AssignOp() { }
 };

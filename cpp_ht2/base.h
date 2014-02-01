@@ -27,6 +27,7 @@ public:
 
   virtual ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) = 0;
   virtual void print(std::ostream& os) = 0;
+  virtual void kickUpVars(std::set<std::string>* target) = 0;
   
   virtual const ErrorInfo getErrorInfo() {
     return _info;
@@ -46,6 +47,11 @@ class BasicOp: public IOp {
 public:
   BasicOp(TokenInfo ti): _value(ti) { 
     setLastError(OK); 
+  }
+
+  void kickUpVars(std::set<std::string>* target) {
+    if (_value.type == VAR)
+      target->insert(_value.token);
   }
 
   ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {

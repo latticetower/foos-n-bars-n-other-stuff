@@ -21,6 +21,8 @@ public:
     return ResultInfo(0);
   }
 
+  void kickUpVars(std::set<std::string>* target) {  }
+
   void print(std::ostream& os) {
     os << "InvalidOp!" << std::endl;
   }

@@ -57,6 +57,11 @@ public:
     return ResultInfo(0, _oper.line, UNKNOWN);
   }
 
+  void kickUpVars(std::set<std::string>* target) {
+    _op1->kickUpVars(target);
+    _op2->kickUpVars(target);
+  }
+
   virtual void print(std::ostream& os) {
     os << "ConditionOp:" << std::endl;
     _op1->print(os);
@@ -107,6 +112,13 @@ public:
     return ResultInfo(0, condition_result.error_info.line);
   }
 
+  void kickUpVars(std::set<std::string>* target) {
+    _condition->kickUpVars(target);
+    for (std::vector<std::unique_ptr<IOp> >::iterator iter = _statements.begin(); iter != _statements.end(); ++iter) {
+      (*iter)->kickUpVars(target);
+    } 
+  }
+
   virtual void print(std::ostream& os) {
     os << "If:" << std::endl;
     _condition->print(os);
@@ -154,6 +166,13 @@ public:
       }
     }
     return ResultInfo(0, 0);
+  }
+
+  void kickUpVars(std::set<std::string>* target) {
+    _condition->kickUpVars(target);
+    for (std::vector<std::unique_ptr<IOp> >::iterator iter = _statements.begin(); iter != _statements.end(); ++iter) {
+      (*iter)->kickUpVars(target);
+    } 
   }
 
   virtual void print(std::ostream& os) {
