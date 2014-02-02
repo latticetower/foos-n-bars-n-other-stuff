@@ -391,6 +391,13 @@ void Parser::ComputeAll(Context* context) {
   }
 }
 
+void Parser::PrintAll(std::ostream* os) {
+  Printer printer(os);
+  for (std::vector<std::unique_ptr<IOp> >::iterator iter = _expressions.begin(); iter != _expressions.end(); ++iter) {
+    (*iter)->acceptVisitor(&printer);
+  }
+}
+
 void Parser::printErrorMessage(ResultInfo ei) {
   if (ei.error_type() == OK)
     return;

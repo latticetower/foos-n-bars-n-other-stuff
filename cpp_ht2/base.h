@@ -26,8 +26,6 @@ public:
 
   ErrorType getLastError(){  return _last_error;  }
 
-  //virtual ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) = 0;
-  virtual void print(std::ostream& os) = 0;
   virtual void kickUpVars(std::set<std::string>* target) = 0;
   virtual ResultInfo acceptVisitor(IVisitor * visitor) = 0;
 
@@ -64,24 +62,5 @@ public:
     return visitor->visit(this);
   }
 
-
-  //ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
-  //  if (_value.type == NUMBER) {
-  //    return ResultInfo(atoi(_value.token.c_str()), _value.line);
-  //  } 
-  //  else {
-  //    if (_value.type == VAR) {
-  //      if (context != NULL) {
-  //        int vi = context->getValue(_value.token);
-  //        return ResultInfo(vi, _value.line, context->getLastError(), _value.token);
-  //      }
-  //    }
-  //  }
-  //  return ResultInfo(0, _value.line, UNDEF_VARIABLE, _value.token);
-  //}
-
-  void print(std::ostream& os) {
-    os << "BasicOp: " << _value.token << std::endl;
-  }
   ~BasicOp() {  }
 };

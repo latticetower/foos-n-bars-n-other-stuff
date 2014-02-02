@@ -11,6 +11,7 @@
 #include "error_handling.h"
 #include "functions.h"
 #include "computator.h"
+#include "printer.h"
 
 
 class Parser{
@@ -47,7 +48,7 @@ public:
   }
   
   void ComputeAll(Context* c);
-
+  void PrintAll(std::ostream* os);
 
 private:
   /*arithmetic operations*/
@@ -69,5 +70,6 @@ private:
   IOp* getWhile(Lexer*lexer);
   IOp* getFunctionDef(Lexer*lexer);
   IOp* getFunctionCall(Lexer*lexer);
+
   void printErrorMessage(ResultInfo ei);
 };

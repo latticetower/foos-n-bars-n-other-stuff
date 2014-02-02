@@ -25,6 +25,7 @@ int main(int argc, char**argv) {
   Parser p(&lexer);
   if (!p.Parse())
     return 0;
+  // p.PrintAll(&std::cout);
   p.ComputeAll(&globalContext);
 
   return 0;
