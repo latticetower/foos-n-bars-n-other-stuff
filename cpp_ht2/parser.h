@@ -10,6 +10,7 @@
 #include "conditional.h"
 #include "error_handling.h"
 #include "functions.h"
+#include "computator.h"
 
 
 class Parser{

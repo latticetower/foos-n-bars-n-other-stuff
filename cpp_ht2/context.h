@@ -24,6 +24,7 @@ public:
   
   //returns value with error code
   virtual int getValue(std::string const& variable) = 0;
+  virtual ~IContext() {}
 };
 
 //class translates some additional information to operations
@@ -49,5 +50,7 @@ public:
 
   //debug method. prints to some output stream information about current context state
   void print();
+
+  ~Context() {}
 };
 

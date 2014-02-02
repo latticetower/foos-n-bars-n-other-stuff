@@ -11,6 +11,14 @@
 class PlusOp: public IOp {
   std::unique_ptr<IOp> _op1, _op2;
 public:
+  std::unique_ptr<IOp> const & op1() const {
+    return _op1;
+  }
+ 
+  std::unique_ptr<IOp> const & op2() const {
+    return _op2;
+  }
+
   ~PlusOp() { }
   PlusOp(IOp* op1, IOp* op2): _op1(op1), _op2(op2) {  
     setLastError(OK);
@@ -26,11 +34,14 @@ public:
     }
   }
 
-  ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
-    ResultInfo op1_value = _op1->Compute(context, _functions);
-    ResultInfo op2_value = _op2->Compute(context, _functions);
-    return op1_value + op2_value;
+  ResultInfo acceptVisitor(IVisitor * visitor) {
+    return visitor->visit(this);
   }
+  //ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+  //  ResultInfo op1_value = _op1->Compute(context, _functions);
+  //  ResultInfo op2_value = _op2->Compute(context, _functions);
+  //  return op1_value + op2_value;
+  //}
 
   void print(std::ostream& os) {
     os << "PlusOp: " << std::endl;
@@ -49,6 +60,16 @@ public:
 class MinusOp: public IOp {
   std::unique_ptr<IOp> _op1, _op2;
 public:
+  std::unique_ptr<IOp> const & op1() const {
+    return _op1;
+  }
+ 
+  std::unique_ptr<IOp> const & op2() const {
+    return _op2;
+  }
+  ResultInfo acceptVisitor(IVisitor * visitor) {
+    return visitor->visit(this);
+  }
   ~MinusOp() { }
   MinusOp(IOp* op1, IOp* op2): _op1(op1), _op2(op2) {  
     setLastError(OK);
@@ -64,11 +85,11 @@ public:
     }
   }
 
-  ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
-    ResultInfo op1_value = _op1->Compute(context, _functions);
-    ResultInfo op2_value = _op2->Compute(context, _functions);
-    return op1_value - op2_value;
-  }
+  //ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+  //  ResultInfo op1_value = _op1->Compute(context, _functions);
+  //  ResultInfo op2_value = _op2->Compute(context, _functions);
+  //  return op1_value - op2_value;
+  //}
 
   void print(std::ostream& os) {
     os << "MinusOp: " << std::endl;
@@ -86,6 +107,17 @@ public:
 class MultOp: public IOp {
   std::unique_ptr<IOp> _op1, _op2;
 public:
+  std::unique_ptr<IOp> const & op1() const {
+    return _op1;
+  }
+ 
+  std::unique_ptr<IOp> const & op2() const {
+    return _op2;
+  }
+  ResultInfo acceptVisitor(IVisitor * visitor) {
+   return visitor->visit(this);
+  }
+
   ~MultOp() { }
   MultOp(IOp* op1, IOp* op2):_op1(op1), _op2(op2) {  
     setLastError(OK);
@@ -101,11 +133,11 @@ public:
     }
   }
 
-  ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
-    ResultInfo op1_value = _op1->Compute(context, _functions);
-    ResultInfo op2_value = _op2->Compute(context, _functions);
-    return op1_value * op2_value;
-  }
+  //ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+  //  ResultInfo op1_value = _op1->Compute(context, _functions);
+  //  ResultInfo op2_value = _op2->Compute(context, _functions);
+  //  return op1_value * op2_value;
+  //}
 
   void print(std::ostream& os) {
     os << "MultOp: " << std::endl;
@@ -124,6 +156,13 @@ public:
 class DivideOp: public IOp {
   std::unique_ptr<IOp> _op1, _op2;
 public:
+  std::unique_ptr<IOp> const & op1() const {
+    return _op1;
+  }
+ 
+  std::unique_ptr<IOp> const & op2() const {
+    return _op2;
+  }
   ~DivideOp() { }
   DivideOp(IOp* op1, IOp* op2): _op1(op1), _op2(op2) {  
     setLastError(OK);
@@ -138,11 +177,14 @@ public:
       return;
     }
   }
-  ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
-    ResultInfo op1_value = _op1->Compute(context, _functions);
-    ResultInfo op2_value = _op2->Compute(context, _functions);
-    return op1_value / op2_value;
+  ResultInfo acceptVisitor(IVisitor * visitor) {
+    return visitor->visit(this);
   }
+  //ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+  //  ResultInfo op1_value = _op1->Compute(context, _functions);
+  //  ResultInfo op2_value = _op2->Compute(context, _functions);
+  //  return op1_value / op2_value;
+  //}
 
   virtual void print(std::ostream& os) {
     os << "DivideOp: " << std::endl;
@@ -163,7 +205,16 @@ class AssignOp: public IOp {
   TokenInfo _variable;
   std::unique_ptr<IOp> _value;
 public:
-  
+  TokenInfo const & variable() const {
+    return _variable;
+  }
+  std::unique_ptr<IOp> const & value() const {
+    return _value;
+  }
+  ResultInfo acceptVisitor(IVisitor * visitor) {
+    return visitor->visit(this);
+  }
+
   AssignOp(TokenInfo var, IOp* value = NULL): _variable(var), _value(value) {  
     setLastError(OK);
     if (var.type != VAR) {
@@ -178,18 +229,18 @@ public:
     }
   }
  
-  ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
-    if (context == NULL) {
-      return ResultInfo(0, _variable.line, NO_CONTEXT);
-    }
-    ResultInfo var_value = _value->Compute(context, _functions);
-    if (var_value.error_type() != OK) {
-      return var_value;
-    }
-    
-    context->setVariable(_variable.token, var_value.result);
-    return var_value;
-  }
+  //ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+  //  if (context == NULL) {
+  //    return ResultInfo(0, _variable.line, NO_CONTEXT);
+  //  }
+  //  ResultInfo var_value = _value->Compute(context, _functions);
+  //  if (var_value.error_type() != OK) {
+  //    return var_value;
+  //  }
+  //  
+  //  context->setVariable(_variable.token, var_value.result);
+  //  return var_value;
+  //}
 
   void print(std::ostream& os) {
     os << "Assign: " << std::endl;

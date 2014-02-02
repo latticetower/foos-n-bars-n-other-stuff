@@ -381,8 +381,9 @@ std::vector<IOp* > Parser::getExpressionsSequence(Lexer* lexer) {
 }
 
 void Parser::ComputeAll(Context* context) {
+  Computator computator(context, &_functions);
   for (std::vector<std::unique_ptr<IOp> >::iterator iter = _expressions.begin(); iter != _expressions.end(); ++iter) {
-    ResultInfo computation_result = (*iter)->Compute(context, _functions);
+    ResultInfo computation_result = (*iter)->acceptVisitor(&computator);
     if (computation_result.error_type() != OK) {
       printErrorMessage(computation_result);
       return;

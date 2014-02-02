@@ -21,6 +21,10 @@ public:
     return ResultInfo(0);
   }
 
+  ResultInfo acceptVisitor(IVisitor * visitor) {
+    //visitor->visit(this);
+    return ResultInfo();
+  }
   void kickUpVars(std::set<std::string>* target) {  }
 
   void print(std::ostream& os) {

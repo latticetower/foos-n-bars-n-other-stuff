@@ -3,6 +3,7 @@
 #include "basic_types.h"
 #include "context.h"
 #include "base.h"
+#include "ivisitor.h"
 
 //FunctionDefOp(function_name, function_parameters_names, sequence)
 /**
@@ -16,6 +17,12 @@ class FunctionDefOp: public IOp {
   std::map<std::vector<int>, int> _call_cache;
   std::set<std::string> _actual_var_names;
 public:
+  std::vector<std::unique_ptr<IOp> > const & statements() const {
+    return _statements;
+  }
+  ResultInfo acceptVisitor(IVisitor * visitor) {
+    return visitor->visit(this);
+  }
   ~FunctionDefOp() { }
 
   FunctionDefOp(std::string function_name, std::vector<std::string> function_parameter_names, 
@@ -44,13 +51,13 @@ public:
 
   }
 
-  bool hasCachedValue(std::vector<int> values) {
-    std::map<std::vector<int>, int>::iterator iter = _call_cache.find(values);
+  bool hasCachedValue(std::vector<int> & values) const {
+    std::map<std::vector<int>, int>::const_iterator iter = _call_cache.find(values);
     return (iter != _call_cache.end());
   }
 
-  ResultInfo getCachedValue(std::vector<int> values) {
-    std::map<std::vector<int>, int>::iterator iter = _call_cache.find(values);
+  ResultInfo const getCachedValue(std::vector<int> values) const{
+    std::map<std::vector<int>, int>::const_iterator iter = _call_cache.find(values);
     if (iter != _call_cache.end()) {
       return ResultInfo(iter->second, 0, OK);
     }
@@ -58,39 +65,40 @@ public:
   }
 
   void setCachedValue(std::vector<int> input_values, ResultInfo func_value) {
-    if (func_value.error_type() == OK)
+    if (func_value.error_type() == OK) {
       _call_cache[input_values] = func_value.result;
+    }
   }
 
   //after being called with specified values gets computed...
   //all params are being 
   //TODO: to write implementation
-  ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
-    // first check up if there are some values computed previously
-    std::vector<int> actual_var_values = this->getActualVarValues(context);
-    
-    if (hasCachedValue(actual_var_values)) {
-      return getCachedValue(actual_var_values);
-    }
+  //ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+  //  // first check up if there are some values computed previously
+  //  std::vector<int> actual_var_values = this->getActualVarValues(context);
+  //  
+  //  if (hasCachedValue(actual_var_values)) {
+  //    return getCachedValue(actual_var_values);
+  //  }
 
-    // if not, try to compute:
-    for (std::vector<std::unique_ptr<IOp> >::iterator iter = _statements.begin(); iter != _statements.end(); ++iter) {
-      ResultInfo ri = (*iter)->Compute(context, _functions);
-      if (ri.error_type() == FUNCTION_RETURN) {
-        ResultInfo ri2(ri.result, ri.error_info.line, OK);
-        setCachedValue(actual_var_values, ri2);
-        return ri2;
-      }
-      if (ri.error_type() != OK) {
-        setCachedValue(actual_var_values, ri);
-        return ri;
-      }
-    }
-    // print(std::cout);
-    ResultInfo ri(0, 0, OK, getName());
-    setCachedValue(actual_var_values, ri);
-    return ri;
-  }
+  //  // if not, try to compute:
+  //  for (std::vector<std::unique_ptr<IOp> >::iterator iter = _statements.begin(); iter != _statements.end(); ++iter) {
+  //    ResultInfo ri = (*iter)->Compute(context, _functions);
+  //    if (ri.error_type() == FUNCTION_RETURN) {
+  //      ResultInfo ri2(ri.result, ri.error_info.line, OK);
+  //      setCachedValue(actual_var_values, ri2);
+  //      return ri2;
+  //    }
+  //    if (ri.error_type() != OK) {
+  //      setCachedValue(actual_var_values, ri);
+  //      return ri;
+  //    }
+  //  }
+  //  // print(std::cout);
+  //  ResultInfo ri(0, 0, OK, getName());
+  //  setCachedValue(actual_var_values, ri);
+  //  return ri;
+  //}
 
   virtual void print(std::ostream& os) {
     os << "name:" << this->getName() << std::endl;
@@ -106,11 +114,11 @@ public:
     
   }
 
-  std::set<std::string> const & getActualVarNames() {
+  std::set<std::string> const & getActualVarNames() const {
     return _actual_var_names;
   }
 
-  std::vector<int> getActualVarValues(IContext* context) {
+  std::vector<int>  getActualVarValues(IContext* context) {
     std::vector<int> actual_values;
     if (context == NULL)
       return actual_values;
@@ -140,6 +148,19 @@ class FunctionCallOp: public IOp {
   int _line;
   std::vector<std::unique_ptr<IOp> > _statements;
 public:
+  std::string const & name() const {
+    return _name;
+  }
+  int const & line() const {
+    return _line;
+  }
+  std::vector<std::unique_ptr<IOp> > const & statements() const {
+    return _statements;
+  }
+  ResultInfo acceptVisitor(IVisitor * visitor) {
+    return visitor->visit(this);
+  }
+
   ~FunctionCallOp() { }
 
   FunctionCallOp(TokenInfo function_name, std::vector<IOp*> statements) { 
@@ -166,40 +187,40 @@ public:
   }
 
   //after being called with specified values gets computed...
-  ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
-    std::map<std::string, std::unique_ptr<IOp> >::const_iterator pToFunction = _functions.find(_name);
-    if (pToFunction == _functions.end()) {
-      return ResultInfo(0, _line, UNDEF_FUNCTION, _name);
-    }
-    
-       
-    FunctionDefOp* functionDefPointer = dynamic_cast<FunctionDefOp*>(pToFunction->second.get());
-    std::vector<std::string> param_names = functionDefPointer->getParamNames();
-    if (param_names.size() != _statements.size()) {
-      return ResultInfo(0, _line, ARGS_MISMATCH, _name);
-    }
-    
-    std::vector<int> values;
-    for (int i = 0; i < (int)param_names.size(); i++) {
-      ResultInfo ri = _statements[i]->Compute(context, _functions);
-      if (ri.error_type() != OK)
-        return ri;
-      values.push_back(ri.result);
-    }
+  //ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+  //  std::map<std::string, std::unique_ptr<IOp> >::const_iterator pToFunction = _functions.find(_name);
+  //  if (pToFunction == _functions.end()) {
+  //    return ResultInfo(0, _line, UNDEF_FUNCTION, _name);
+  //  }
+  //  
+  //     
+  //  FunctionDefOp* functionDefPointer = dynamic_cast<FunctionDefOp*>(pToFunction->second.get());
+  //  std::vector<std::string> param_names = functionDefPointer->getParamNames();
+  //  if (param_names.size() != _statements.size()) {
+  //    return ResultInfo(0, _line, ARGS_MISMATCH, _name);
+  //  }
+  //  
+  //  std::vector<int> values;
+  //  for (int i = 0; i < (int)param_names.size(); i++) {
+  //    ResultInfo ri = _statements[i]->Compute(context, _functions);
+  //    if (ri.error_type() != OK)
+  //      return ri;
+  //    values.push_back(ri.result);
+  //  }
 
-    std::vector<int> actual_values = functionDefPointer->getActualVarValues(context);
+  //  std::vector<int> actual_values = functionDefPointer->getActualVarValues(context);
 
-    if (functionDefPointer->hasCachedValue(actual_values)) {
-      return functionDefPointer->getCachedValue(actual_values);
-    }
-    
-    Context func_context(context); // give context to allow use of global variables in function
+  //  if (functionDefPointer->hasCachedValue(actual_values)) {
+  //    return functionDefPointer->getCachedValue(actual_values);
+  //  }
+  //  
+  //  Context func_context(context); // give context to allow use of global variables in function
 
-    for (int i = 0; i < (int)param_names.size(); i++) {
-      func_context.setVariable(param_names[i], values[i]);
-    }
-    return functionDefPointer->Compute(&func_context, _functions);
-  }
+  //  for (int i = 0; i < (int)param_names.size(); i++) {
+  //    func_context.setVariable(param_names[i], values[i]);
+  //  }
+  //  return functionDefPointer->Compute(&func_context, _functions);
+  //}
 
   void kickUpVars(std::set<std::string>* target) {
     for (std::vector<std::unique_ptr<IOp> >::iterator iter = _statements.begin(); iter != _statements.end(); ++ iter) {
@@ -222,6 +243,13 @@ public:
 class ReturnOp: public IOp {
   std::unique_ptr<IOp> _value;
 public:
+  std::unique_ptr<IOp> const & value() const {
+    return _value;
+  }
+  ResultInfo acceptVisitor(IVisitor * visitor) {
+    return visitor->visit(this);
+  }
+
   ~ReturnOp() { }
 
   ReturnOp() {}
@@ -230,7 +258,7 @@ public:
     setErrorInfo(op->getErrorInfo());
   }
   
-  ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
+ /* ResultInfo Compute(IContext* context, std::map<std::string, std::unique_ptr<IOp> > const & _functions) {
     ResultInfo expr_result = _value->Compute(context, _functions);
     if (expr_result.error_type() != OK) {
       return expr_result;
@@ -238,7 +266,7 @@ public:
     expr_result.error_info.type = FUNCTION_RETURN;
    
     return expr_result;
-  }
+  }*/
 
   void kickUpVars(std::set<std::string>* target) {
     _value->kickUpVars(target);

@@ -54,7 +54,7 @@ struct ResultInfo{
   ResultInfo(int _result, int _line, ErrorType info, std::string const& name): error_info(info, _line), object_name(name), 
                                 result(_result) { }
 
-  ErrorType error_type() {
+  ErrorType const& error_type() const {
     return error_info.type;
   }
   ResultInfo operator == (ResultInfo res2) {
